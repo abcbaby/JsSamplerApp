@@ -1,0 +1,230 @@
+{
+  "nodes": [
+    {
+      "id": "Event|2011-07-15T19:36:14", 
+      "label": "2011-07-15T19:36:14", 
+      "title": "Event VX0|VHCL_CRSG|123", 
+      "shape": "image", 
+      "size": "20", 
+      "image": "/img/event.png", 
+      "type": "Event", 
+      "imageContent": "", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "tags": [
+        "event", 
+        "orphan"
+      ], 
+      "values": {
+        "timestamp": "2011-07-15T19:36:14", 
+        "type": "Primary Vehicle"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "2011-07-15T19:36:14", 
+          "label": "Event", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "DATE_dts:(2011-07-15T19:36:14)", 
+              "unfielded": "2011-07-15T19:36:14"
+            }, 
+            "and": {
+              "fielded": "+DATE_dts:(+2011-07-15T19:36:14)", 
+              "unfielded": "+2011-07-15T19:36:14"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "id": "7219cb7f88164e1b8109139d6589084c", 
+      "label": "", 
+      "title": "Person VX0|VHCL_CRSG|123", 
+      "shape": "image", 
+      "size": "20", 
+      "image": "/img/person-unk.png", 
+      "type": "Person", 
+      "imageContent": "", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "tags": [
+        "person-agent", 
+        "orphan"
+      ], 
+      "values": {
+        "firstName": "C.", 
+        "lastName": "JONES", 
+        "middleName": "W"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "C. W JONES", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "NAME_txt:(C. W JONES)", 
+              "unfielded": "C. W JONES"
+            }, 
+            "and": {
+              "fielded": "+NAME_txt:(+C. +W +JONES)", 
+              "unfielded": "+C. +W +JONES"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "id": "Port|L361", 
+      "label": "L361", 
+      "title": "Port VX0|VHCL_CRSG|123", 
+      "shape": "image", 
+      "size": "20", 
+      "image": "/img/Port.png", 
+      "type": "Port", 
+      "imageContent": "", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "tags": [
+        "port-crossing", 
+        "orphan"
+      ], 
+      "values": {
+        "code": "L361"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "L361", 
+          "label": "Port", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "PORT_ENTRY_txt:(L361)", 
+              "unfielded": "L361"
+            }, 
+            "and": {
+              "fielded": "+PORT_ENTRY_txt:(+L361)", 
+              "unfielded": "+L361"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "id": "Port|3604", 
+      "label": "3604", 
+      "title": "Port VX0|VHCL_CRSG|123", 
+      "shape": "image", 
+      "size": "20", 
+      "image": "/img/Port.png", 
+      "type": "Port", 
+      "imageContent": "", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "tags": [
+        "port-crossing", 
+        "orphan"
+      ], 
+      "values": {
+        "code": "3604"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "3604", 
+          "label": "Port", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "PORT_ENTRY_txt:(3604)", 
+              "unfielded": "3604"
+            }, 
+            "and": {
+              "fielded": "+PORT_ENTRY_txt:(+3604)", 
+              "unfielded": "+3604"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "id": "Vehicle|ON_5895YY_ON_5895YY_5895YY", 
+      "label": "5895YY", 
+      "title": "Vehicle VX0|VHCL_CRSG|123", 
+      "shape": "image", 
+      "size": "20", 
+      "image": "/img/car.png", 
+      "type": "Vehicle", 
+      "imageContent": "", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "tags": [
+        "orphan", 
+        "vehicle"
+      ], 
+      "values": {
+        "number": "5895YY", 
+        "issueStateCode": "ON", 
+        "identity": "5895YY"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "5895YY", 
+          "label": "Vehicle", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "LICENSE_PLATE_txt:(ON 5895YY) LICENSE_PLATE_txt:(ON 5895YY) LICENSE_PLATE_txt:(5895YY)", 
+              "unfielded": "5895YY"
+            }, 
+            "and": {
+              "fielded": "+LICENSE_PLATE_txt:(+ON +5895YY) +LICENSE_PLATE_txt:(+ON +5895YY) +LICENSE_PLATE_txt:(+5895YY)", 
+              "unfielded": "+ON +5895YY +ON +5895YY +5895YY"
+            }
+          }
+        }
+      ]
+    }
+  ], 
+  "edges": [
+    {
+      "id": "7219cb7f88164e1b8109139d6589084c-Event|2011-07-15T19:36:14", 
+      "label": "relates to", 
+      "title": "relates to", 
+      "from": "7219cb7f88164e1b8109139d6589084c", 
+      "to": "Event|2011-07-15T19:36:14", 
+      "font": { "align": "middle" },
+      "direction": "NONE", 
+      "labelAlignment": "line-center", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
+    },
+    {
+      "id": "Port|L361-Event|2011-07-15T19:36:14", 
+      "label": "relates to", 
+      "title": "relates to", 
+      "from": "Port|L361", 
+      "to": "Event|2011-07-15T19:36:14", 
+      "font": { "align": "middle" },
+      "direction": "NONE", 
+      "labelAlignment": "line-center", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
+    }, 
+    {
+      "id": "Vehicle|ON_5895YY_ON_5895YY_5895YY-Event|2011-07-15T19:36:14", 
+      "label": "relates to", 
+      "title": "relates to", 
+      "from": "Vehicle|ON_5895YY_ON_5895YY_5895YY", 
+      "to": "Event|2011-07-15T19:36:14", 
+      "font": { "align": "middle" },
+      "direction": "NONE", 
+      "labelAlignment": "line-center", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
+    }, 
+    {
+      "id": "Port|3604-Event|2011-07-15T19:36:14", 
+      "label": "relates to", 
+      "title": "relates to", 
+      "from": "Port|3604", 
+      "to": "Event|2011-07-15T19:36:14", 
+      "font": { "align": "middle" },
+      "direction": "NONE", 
+      "labelAlignment": "line-center", 
+      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
+    }
+  ]
+}

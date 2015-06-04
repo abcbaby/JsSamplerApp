@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.dragonzone</groupId>
+	<artifactId>JsSamplerApp</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>war</packaging>
+
+	<name>JsSamplerApp</name>
+
+	<properties>
+		<endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!--<glassfish.javax.faces.version>2.2.8-03</glassfish.javax.faces.version> -->
+		<glassfish.javax.faces.version>2.1.29</glassfish.javax.faces.version>
+		<primefaces.version>5.2</primefaces.version>
+		<spring.version>4.1.6.RELEASE</spring.version>
+		<spring.security.version>3.2.5.RELEASE</spring.security.version>
+		<jstl.version>1.2</jstl.version>
+		<jackson.version>2.5.1</jackson.version>
+		<logback.version>1.1.2</logback.version>
+		<slf4j.version>1.7.7</slf4j.version>
+		<skipTests>false</skipTests>
+	</properties>
+	
+	<repositories>
+        <repository>
+            <id>prime-repo</id>
+            <name>Prime Repo</name>
+            <url>http://repository.primefaces.org</url>
+        </repository>
+    </repositories> 
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-web-api</artifactId>
+			<version>7.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- logging -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<!-- Spring dependencies -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>jstl</groupId>
+			<artifactId>jstl</artifactId>
+			<version>${jstl.version}</version>
+		</dependency>
+
+		<!-- Spring Security -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${spring.security.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${spring.security.version}</version>
+		</dependency>
+
+        <dependency>
+            <groupId>org.jasypt</groupId>
+            <artifactId>jasypt</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+		<dependency>
+			<groupId>org.jasypt</groupId>
+			<artifactId>jasypt-spring31</artifactId>
+			<version>1.9.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jasypt</groupId>
+			<artifactId>jasypt-springsecurity3</artifactId>
+			<version>1.9.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.faces</artifactId>
+			<version>${glassfish.javax.faces.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.primefaces</groupId>
+			<artifactId>primefaces</artifactId>
+			<version>${primefaces.version}</version>
+		</dependency>
+		<dependency>
+            <groupId>org.primefaces.themes</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>1.0.10</version>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-httpclient</groupId>
+			<artifactId>commons-httpclient</artifactId>
+			<version>3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+
+
+		<!--Used for JSF 2.1 OR BELOW FOR FILEUPLOAD -->
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>1.3.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.9</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+					<compilerArguments>
+						<endorseddirs>${endorsed.dir}</endorseddirs>
+					</compilerArguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.3</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<outputDirectory>C:\jenkins\workspace\TestApp</outputDirectory>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${endorsed.dir}</outputDirectory>
+							<silent>true</silent>
+							<artifactItems>
+								<artifactItem>
+									<groupId>javax</groupId>
+									<artifactId>javaee-endorsed-api</artifactId>
+									<version>7.0</version>
+									<type>jar</type>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<!-- to enable testing, comment out below -->
+				<version>2.18</version>
+				<configuration>
+					<skipTests>${skipTests}</skipTests>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.tomcat.maven</groupId>
+				<artifactId>tomcat7-maven-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<port>8888</port>
+					<!--<httpsPort>443</httpsPort> -->
+					<!--<contextFile>src/main/tomcat/tomcat-context-local.xml</contextFile> -->
+					<!--Need https setup in order to test local SAML integration -->
+					<!-- <keystoreFile>${basedir}/jetty-ssl.keystore</keystoreFile> <keystorePass>jetty8</keystorePass> -->
+					<warSourceDirectory>${basedir}/src/main/webapp</warSourceDirectory>
+					<path>/</path>
+					<systemProperties>
+						<!-- <JAVA_OPTS>-Xms1024m -Xmx2048m -XX:PermSize=1024m -XX:MaxPermSize=2048m</JAVA_OPTS> 
+							<log.dir>/opt/logs</log.dir> <config.dir>/opt/config</config.dir> -->
+					</systemProperties>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.glassfish</groupId>
+						<artifactId>javax.faces</artifactId>
+						<version>${glassfish.javax.faces.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.0.5.v20130815</version>
+				<!-- This plugin currently doesn't like spaces in classpath so if you 
+					can't do jetty:run Create a junction to your maven repository (or just move 
+					it to the location below and put "localRepository" entry in your settings.xml 
+					in your %USERPROFILE%\.m2\repository directory. junction c:\opt\m2repo "%USERPROFILE%\.m2\repository" 
+					<localRepository>c:/opt/m2repo</localRepository> -->
+				<configuration>
+					<stopPort>8889</stopPort>
+					<stopKey>STOPJETTYPLEASE</stopKey>
+					<useTestScope>false</useTestScope>
+					<webAppSourceDirectory>${basedir}/src/main/webapp</webAppSourceDirectory>
+					<!-- Properties in webappconfig call methods on org.mortbay.jetty.webapp.WebAppContext -->
+					<webAppConfig>
+						<contextPath>/</contextPath>
+						<tempDirectory>${project.build.directory}</tempDirectory>
+						<!-- <defaultsDescriptor>${basedir}/src/main/jetty/WEB-INF/webdefault.xml</defaultsDescriptor> 
+							<overrideDescriptor>${basedir}/src/main/jetty/WEB-INF/web-override.xml</overrideDescriptor> 
+							<jettyEnvXml>${basedir}/src/main/jetty/WEB-INF/jetty-env.xml</jettyEnvXml> -->
+					</webAppConfig>
+					<!--<jettyConfig>${basedir}/src/main/jetty/jetty.xml</jettyConfig> -->
+					<systemProperties>
+						<systemProperty>
+							<name>jetty.host</name>
+							<value>localhost</value>
+						</systemProperty>
+						<systemProperty>
+							<name>jetty.port</name>
+							<value>8888</value>
+						</systemProperty>
+						<systemProperty>
+							<name>log.dir</name>
+							<value>/opt/logs</value>
+						</systemProperty>
+						<systemProperty>
+							<name>config.dir</name>
+							<value>/opt/config</value>
+						</systemProperty>
+					</systemProperties>
+				</configuration>
+				<dependencies>
+					<!-- <dependency> <groupId>oracle</groupId> <artifactId>ojdbc6</artifactId> 
+						<version>${oracle.jdbc}</version> </dependency> -->
+					<dependency>
+						<groupId>org.glassfish</groupId>
+						<artifactId>javax.faces</artifactId>
+						<version>${glassfish.javax.faces.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+
+		<filters>
+			<filter>src/main/resources/app.properties</filter>
+		</filters>
+		<!-- In order to use filters you must specify a resource directory and 
+			set filtering to true. -->
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+	</build>
+</project>

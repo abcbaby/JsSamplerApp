@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Backbone Sample Application</title>
+    <script src="libs/jquery-1.9.1.js" type="text/javascript"></script>
+    <script src="libs/underscore.js" type="text/javascript"></script>
+    <script src="libs/json2.js" type="text/javascript"></script>
+    <script src="libs/backbone.js" type="text/javascript"></script>
+    <script src="libs/backbone.marionette.js" type="text/javascript"></script>
+    <script src="js/model.js" type="text/javascript"></script>
+    <script src="js/controller.js" type="text/javascript"></script>
+</head>
+<body>
+    <h2>1</h2>
+    <div class="main">
+        <script type="text/javascript">
+    // Lets perform a create operation [CREATE]
+    var book = new Book({ title: "Backbone Book 43" });
+    book.save({}, {
+        success: function (model, respose, options) {
+            console.log("The model has been saved to the server");
+        },
+        error: function (model, xhr, options) {
+            console.log("Something went wrong while saving the model");
+        }
+    });
+
+    // Now let us try to retrieve a book [READ]
+    var book1 = new Book({ id: "id10" });
+    book1.fetch({
+        success: function (bookResponse) {
+            console.log("Found the book: " + bookResponse.get("title"));
+
+            // Let us update this retreived book now (doing it in the callback) [UPDATE]
+            bookResponse.set("title", bookResponse.get("title") + "_updated");
+            bookResponse.save({}, {
+                success: function (model, respose, options) {
+                    console.log("The model has been updated to the server");
+                },
+                error: function (model, xhr, options) {
+                    console.log("Something went wrong while updating the model");
+                }
+            });
+        }
+    });
+
+    // Let us delete the model with id 13 [DELETE]
+    var book2 = new Book({ id: "id13" });
+    book2.destroy({
+        success: function (model, respose, options) {
+            console.log("The model has deleted the server");
+        },
+        error: function (model, xhr, options) {
+            console.log("Something went wrong while deleting the model");
+        }
+    });
+
+
+    //Let us try to fetch a collection of books
+    var books = new BooksCollection();
+    
+    books.fetch({
+        success: function(books) {
+            console.log(books.length + " books found");
+        }
+    });    
+
+        </script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+/* Font size for PrimeFaces */
+* {
+    font-size: 12px;
+}
+
+.ui-growl {
+    top: 50px !important;
+}
+
+a {
+    text-decoration: none;
+    font-weight: normal !important;
+}
+
+a:hover {
+    text-decoration: none;
+    font-weight: bold !important;
+}
+
+.ui-terminal {
+    background-color: black !important;
+    color: lime !important;
+    font-size: 11px !important;
+    font-family: "Courier New" !important;
+}
+
+.label {
+    font-weight: bold !important;
+}
+
+.hiddenFile {
+    font-style: italic !important;
+    color: green !important;
+}
+
+.noBorder {
+    border-style: hidden !important;
+    border-color: transparent;
+    border: 0;
+}
+
+.panelGrid-noBorder td {
+    border-style: hidden !important;
+    border-color: transparent;
+    text-align:left;
+}
+
+.panelGrid-noBorder table {
+    border-style: hidden !important;
+    border-color: transparent;
+    width:100%; 
+}
+
+.dataList-noBorder div {
+    border-style: hidden !important;
+    border-color: white;
+    text-align:left;
+}
+
+.alignTopMaxWidth {
+    vertical-align: top !important;;
+    width: 100% !important;;
+}
+
+.alignTopCenterMaxWidth {
+    text-align: center !important;;
+    vertical-align: top !important;;
+    width: 100% !important;;
+}
+
+.alignTop {
+    vertical-align: top !important;;
+}
+
+.alignLeft {
+    text-align: left !important;;
+}
+
+.alignCenter {
+    text-align: center !important;;
+}
+
+.alignJustify {
+    text-align: justify !important;;
+}
+
+.alignCenterDiv {
+    text-align: center !important;
+    margin-left: auto !important;; 
+    margin-right: auto !important;
+}
+
+.alignRight {
+    text-align: right !important;;
+}
+
+.alignRightNoWrap {
+    text-align: right !important;;
+    white-space:nowrap !important;;
+}
+
+.alignLeftTop {
+    text-align: left !important;;
+    vertical-align: top !important;;
+}
+.alignCenterTop {
+    text-align: center !important;;
+    vertical-align: top !important;;
+}
+.alignRightTop {
+    text-align: right !important;;
+    vertical-align: top !important;;
+}
+
+.nowrap {
+    white-space:nowrap;
+} 

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<title>Network | node as icon</title>
+
+<script type="text/javascript" src="/js/vis/vis.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script type="text/javascript" src="network_files/bootstrap.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-growl/1.0.0/jquery.bootstrap-growl.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+<script type="text/javascript" src="/js/utils.js"></script>
+
+<link href="/js/vis/vis.css" rel="stylesheet" type="text/css">
+<link href="/css/bootstrap-dropdown.css" rel="stylesheet" type="text/css">
+<link href="network_files/bootstrap.min.css" rel="stylesheet" type="text/css">
+<style>
+#network {
+	background-color: whitesmoke;
+}
+#contextMenu {
+	position: absolute;
+	z-index: 9999;
+	display: none;
+}}
+</style>
+
+</head>
+
+<body>
+<div id="contextMenu" class="dropdown clearfix"></div>
+
+<div id="content" class="content">
+	<ul>
+		<li>Just click the "Link" button - simulating a search</li>
+		<li>Select a node and right-mouse click, "See Also" (refresh page if you have done the previous step, since pulling in same data)</li>
+		<li>Select multiple node (by hold down the Ctrl key) and right-mouse click (with same image)</li>
+		<li>Select multiple node (by hold down the Ctrl key) and right-mouse click (with different image)</li>
+	</ul>
+	<div id="manualSearch" class="row">
+		<div class="col-md-11">
+			<form class="form-inline" onsubmit="return false;">
+				<div class="form-group">
+					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
+				</div>
+				<div class="form-group laRows">
+					<select id="laRows" class="form-control"></select>
+				</div>
+				<div class="form-group">
+					<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
+				</div>
+				<div class="form-group">
+					<div class="dropdown">
+					    <button class="btn btn-default dropdown-toggle fa fa-cog" type="button" data-toggle="dropdown"> Options
+					    <span class="caret"></span></button>
+					    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+					    	<li id="laResetBtn"><a role="menuitem" tabindex="-1" href="#">Reset</a></li>
+					    	<li id="laClearBtn"><a role="menuitem" tabindex="-1" href="#">Clear</a></li>
+					    	<li class="divider"></li>
+					    	<li class="dropdown-submenu">
+				                <a tabindex="-1" href="#">Layouts</a>
+				                <ul class="dropdown-menu">
+							    	<li id="udBtn"><a role="menuitem" tabindex="-1" href="#">Up-Down</a></li>
+							    	<li id="duBtn"><a role="menuitem" tabindex="-1" href="#">Down-Up</a></li>
+							    	<li id="lrBtn"><a role="menuitem" tabindex="-1" href="#">Left-Right</a></li>
+							    	<li id="rlBtn"><a role="menuitem" tabindex="-1" href="#">Right-Left</a></li>
+							    	<li class="divider"></li>
+							    	<li id="defaultLayoutBtn"><a role="menuitem" tabindex="-1" href="#">Default</a></li>
+				                </ul>
+				            </li>
+					    </ul>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	<div id="network"></div>
+</div>
+
+<script id="hb-context-menu" type="text/x-handlebars-template">
+	<ul id="networkContextMenuId" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display: block; position: static; margin-bottom: 5px;">
+		{{#if seeAlso}}
+		<li class="dropdown-submenu">
+			<a tabindex="-1" href="#">See Also</a>
+			<ul class="dropdown-menu">
+				{{#each seeAlso}}
+				{{{addDivider @index}}}
+				{{{loadSeeAlso this.displayValue}}}
+		        {{/each}}
+			</ul>
+		</li>
+		<li class="divider"></li>
+		{{/if}}
+		{{#if allowMerge}}
+		<li><a tabindex="-1">Merge</a></li>
+		<li class="divider"></li>
+		{{/if}}
+		{{#if this.canCluster}}<li><a tabindex="-1">Cluster</a></li>{{/if}}
+		{{#if this.canClusterExpand}}<li><a tabindex="-1">Cluster Expand</a></li>{{/if}}
+		<li class="disabled"><a tabindex="-1">View Detail</a></li>
+		{{#if this.allowRemove}}<li><a tabindex="-1">Remove</a></li>{{/if}}
+	</ul>
+</script>
+
+<script id="hb-rows" type="text/x-handlebars-template">
+	{{#each rows}}
+	<option value="{{this}}">{{this}}</option>
+	{{/each}}
+</script>
+
+<script type="text/javascript" src="/js/link-analysis.js"></script>
+
+</body>
+</html>

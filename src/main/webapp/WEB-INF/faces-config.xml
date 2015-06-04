@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<faces-config version="2.2"
+              xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
+    <application>
+        <el-resolver>
+            org.springframework.web.jsf.el.SpringBeanFacesELResolver
+        </el-resolver>
+        <el-resolver>
+            org.primefaces.application.exceptionhandler.PrimeExceptionHandlerELResolver
+        </el-resolver>
+        <locale-config>
+            <default-locale>en</default-locale>
+        </locale-config>
+        <message-bundle>resources</message-bundle>
+        <resource-bundle>
+            <base-name>resources</base-name>
+            <var>msg</var>
+        </resource-bundle>
+    </application>
+    <factory>
+        <exception-handler-factory>
+            org.primefaces.application.exceptionhandler.PrimeExceptionHandlerFactory
+        </exception-handler-factory>
+    </factory>
+</faces-config>

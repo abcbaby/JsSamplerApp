@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+
+	<h:head>
+		<f:facet name="first">
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<title>App name</title>
+			<link type="text/css" rel="stylesheet"
+				href="#{request.contextPath}/css/default.css" />
+		</f:facet>
+	</h:head>
+
+	<h:body>
+		<f:event type="preRenderComponent"
+			listener="#{postControlBean.preLoadPage}" />
+
+		<h:form id="mainFormId">
+			<p:growl id="growlId" autoUpdate="true" showDetail="true"
+				sticky="true" />
+
+			<h:outputLink value="/backboneSample/index.htm">Backbone.js + Marionette Sample</h:outputLink>
+
+			<p:toolbar>
+				<f:facet name="left">
+					<h:outputLabel value="ID Contains:" />
+					<p:spacer width="5" />
+					<p:inputText id="searchId" value="#{postBean.search}" size="35" />
+					<p:spacer width="5" />
+					<p:commandButton actionListener="#{postControlBean.search}"
+						value="Search" process="@this searchId" icon="fa fa-search"
+						update="mainPanelId" />
+				</f:facet>
+				<f:facet name="right">
+					<h:outputLabel value="URL:" />
+					<p:spacer width="5" />
+					<p:inputText id="urlId" value="#{postBean.url}" size="45" />
+					<p:spacer width="5" />
+					<p:commandButton actionListener="#{postControlBean.convertHtml()}"
+						value="Convert to PDF" process="@this urlId" icon="fa fa-download" />
+				</f:facet>
+			</p:toolbar>
+
+			<p:panel id="mainPanelId">
+				<p:dataTable value="#{postBean.bookList}" var="doc" paginator="true"
+					paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,25" rows="5">
+					<f:facet name="header">Total: #{postBean.bookList.size()}</f:facet>
+					<p:column headerText="ID" sortBy="#{doc.id}">
+						<h:outputLabel value="#{doc.id}" />
+					</p:column>
+					<p:column headerText="Title" sortBy="#{doc.title}">
+						<h:outputLabel value="#{doc.title}" />
+					</p:column>
+					<p:column headerText="Description">
+						<h:outputLabel value="#{doc.description}" />
+					</p:column>
+				</p:dataTable>
+			</p:panel>
+		</h:form>
+	</h:body>
+</f:view>
+</html>
