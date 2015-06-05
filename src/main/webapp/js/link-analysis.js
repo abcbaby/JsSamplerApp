@@ -88,6 +88,10 @@ var LinkAnalysisView = Backbone.View.extend({
 	}
 });
 
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+
 // Read a page's GET URL variables and return them as an associative array.
 function getUrlVars() {
     var vars = [], hash;
@@ -156,6 +160,7 @@ function initDraw(jsonData) {
 }
 
 function draw(customLayout) {
+	customLayout.randomSeed = 2;
 	var panelHeight = ($(window).height() - (($(".security-banner").height() * 2) + $(".navbar-header").height() + 50)) + "px";
 	var options = {
 		height : panelHeight,
@@ -163,6 +168,9 @@ function draw(customLayout) {
 	    	multiselect: true,
 	    	navigationButtons: true,
 	    	keyboard: true
+	    },
+	    nodes: {
+	    	shadow: true
 	    },
         edges: {
 			smooth: false,
@@ -174,7 +182,8 @@ function draw(customLayout) {
 			barnesHut : {
 				gravitationalConstant : -2000,
 				centralGravity : 0.1,
-				springLength : 200,
+				springLength : 100,
+				avoidOverlap: 0.75,
 				springConstant : 0.04,
 				damping : 0.09
 			}
@@ -189,6 +198,8 @@ function draw(customLayout) {
 		edges : edges
 	};
 	network = new vis.Network(container, data, options);
+	
+	registerListeners();
 
 	return network;
 }
@@ -244,32 +255,36 @@ function loadCluster(cluster) {
 }
 
 function registerListeners() {
+	// need to disabled right mouse click otherwise, the network right-mouse click menu will not display properly
+	document.body.oncontextmenu = function() {return false;}
+	
 	var $contextMenu = $("#contextMenu");
 
-	$("body").on("contextmenu", "#network", function(e) {
-		var selection = network.getSelection();
-		if (selection.nodes.length != 0) {
+	network.on("oncontext", function (e) {
+		if (e.nodes.length != 0) {
+			network.selectNodes(e.nodes);
+			var selection = network.getSelection();
 			var theTemplateScript = $("#hb-context-menu").html();
 			var theTemplate = Handlebars.compile(theTemplateScript);
 			var seeAlsoList;
-			var selectedNodes = nodes.get(selection.nodes);
+			var selectedNodes = nodes.get(e.nodes);
 			if (selectedNodes[0] != null) {
 				seeAlsoList = selectedNodes[0].seeAlso;
 			}
-			var canClusterExpand = _.some(selection.nodes, function(e) {
+			var canClusterExpand = _.some(e.nodes, function(e) {
 				return network.isCluster(e);
 			});
 			var content  = {
 				seeAlso: seeAlsoList,
-				canCluster: selection.nodes.length > 1,
+				canCluster: e.nodes.length > 1,
 				canClusterExpand: canClusterExpand,
-				allowRemove: _.isEmpty(selection.edges)};
+				allowRemove: false};
 			var compiledHtml = theTemplate(content);
-			$('#contextMenu').html(compiledHtml);
+			$contextMenu.html(compiledHtml);
 			$contextMenu.css({
 				display : "block",
-				left : e.pageX,
-				top : e.pageY
+				left : e.pointer.DOM.x + $("#network").offset().left,
+				top : e.pointer.DOM.y + $("#network").offset().top
 			});
 		}
 		return false;
@@ -296,7 +311,8 @@ function registerListeners() {
 				var cId = 'clusterId-' + clusterId;
 				var selectedNodes = _.without(nodes.get(selection.nodes), null);
 				var sameType = _.every(selectedNodes, function(e) {
-					return selectedNodes[0].type == e.type;
+					// don't compare by type, since person can be suspect or officer, which have diff. image
+					return selectedNodes[0].image == e.image;
 				});
 				_.each(selectedNodes, function(item) {
 					item[cId] = cId;
@@ -318,32 +334,37 @@ function registerListeners() {
 				break;
 			default:
 				if (selectedMenuItem != "See Also") {
-					var selectedNodes = nodes.get(network.getSelection().nodes);
+					var selectedNodes = nodes.get(selection.nodes);
 					var seeAlsoItem = _.findWhere(selectedNodes[0].seeAlso, {
 						displayValue: selectedMenuItem.lastIndexOf(" ") == -1 
 							? selectedMenuItem 
 							: selectedMenuItem.substring(0, selectedMenuItem.lastIndexOf(" "))
 					});
 					if (!_.isUndefined(seeAlsoItem) && !_.isNull(seeAlsoItem)) {
-						var queryStr = getUrlVars();
+						var rows = $('#laRows').val();
 						
 						var queryType = seeAlsoItem.queries.and; // default to and
-						if (selectedMenuItem.endsWith(" (OR)")) {
+						if (endsWith(selectedMenuItem, " (OR)")) {
 							queryType = seeAlsoItem.queries.or;
 						}
 						
 						var postData = {
 							"query": queryType.fielded,
 						    "start": 0,
-						    "rows": queryStr.rows,
+						    "rows": rows,
 						    "matchAll": true,
 						    "newSearch": true
 						};
-						if (queryStr.filterQuery) {
-							postData.filterQuery = { "AFI__DOC_TYPE_t" : [ queryStr.filterQuery ] };
+						if ($("#laFilterQuery").val()) {
+							postData.filterQuery = { "AFI__DOC_TYPE_t": [ $("#laFilterQuery").val() ] };
+						}
+						if ($("#laFacet").val()) {
+							postData.facet = true;
+							postData.facetMethod = "fc";
+							postData.facetField = $("#laFacet").val();
 						}
 						search(postData);
-						ALERT.info("Retrieved " + queryStr.rows + " documents with query, " + queryType.fielded);
+						ALERT.info("Retrieved " + rows + " documents with query, " + queryType.fielded);
 	
 					}
 				}
@@ -367,9 +388,9 @@ $(document).ready(function() {
 
 	initDraw(jsonData);
 
-	registerListeners();
-	
-	$("#sidebarItemLinkAnalysis").css('display', 'inline');
+	if (jsonData.nodes.length == 0) {
+		ALERT.warning("Data cannot be represented in the chart! Please try again.");
+	}
 	
 	// some json data have not been pulled yet, therefore, need timeout, otherwise, IE *sometimes* fail
 	setTimeout(function(){

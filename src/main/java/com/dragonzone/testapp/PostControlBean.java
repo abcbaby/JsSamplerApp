@@ -19,6 +19,8 @@ public class PostControlBean {
 
 	// private String baseURL = "http://jsonplaceholder.typicode.com";
 	private String baseURL = "http://localhost:8888";
+    @ManagedProperty("#{restTemplate}")
+    private RestTemplate restTemplate;
 	@ManagedProperty("#{postBean}")
 	private PostBean postBean;
 	@ManagedProperty(value = "#{param.id}")
@@ -27,9 +29,8 @@ public class PostControlBean {
 	public void preLoadPage() {
 		postBean.setBookList(fetchBooks(id));
 	}
-	
+    
 	public List<Book> fetchBooks(String search) {
-		RestTemplate restTemplate = new RestTemplate();
 		Book[] books = search == null 
 				? restTemplate.getForObject(baseURL + "/rest/books", Book[].class) 
 				: restTemplate.getForObject(baseURL + "/rest/books?id={id}", Book[].class, search);
@@ -92,5 +93,9 @@ public class PostControlBean {
 	 */
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public void setRestTemplate(RestTemplate restTemplate) {
+		this.restTemplate = restTemplate;
 	}
 }

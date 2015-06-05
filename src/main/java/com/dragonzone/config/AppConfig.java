@@ -7,6 +7,10 @@ import java.util.Properties;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig;
@@ -23,10 +27,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.JstlView;
@@ -39,6 +47,10 @@ public class AppConfig {
 
 	@Autowired
 	private ApplicationContext ctx;
+
+	@Autowired
+	@Qualifier("environment")
+	private Environment env;
 	
 	@Bean
 	public InternalResourceViewResolver viewResolver() {
@@ -143,5 +155,16 @@ public class AppConfig {
 		ConfigurableApplicationContext configCtx = (ConfigurableApplicationContext) ctx;
 		MutablePropertySources sources = configCtx.getEnvironment().getPropertySources();
 		sources.addFirst(encPropSource);
+	}
+
+	@Bean
+	public RestTemplate restTemplate() {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		BasicCredentialsProvider credentialsProvider =  new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(AuthScope.ANY, 
+				new UsernamePasswordCredentials("admin", env.getProperty("account.admin.password")));
+		httpClient.setCredentialsProvider(credentialsProvider);
+		ClientHttpRequestFactory rf = new HttpComponentsClientHttpRequestFactory(httpClient);
+		return new RestTemplate(rf);
 	}
 }
