@@ -1,7 +1,7 @@
 JsSamplerApp
 ======================
 
-![ScreenShot](http://imgur.com/lygop9D)
+![ScreenShot](http://i.imgur.com/lygop9D.png)
 
 
 This project have samplers of various frameworks. It uses Spring Framework (Annotations), 
