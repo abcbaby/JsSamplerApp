@@ -1,3 +1,5 @@
+set PATH=C:\opt\Netbeans 8.0.2\java\maven\bin;%PATH%
+set JAVA_HOME=C:\opt\jdk1.8.0_40-b26
 set PORT=%1
 shift
 if "" == "%PORT%" set PORT=7555

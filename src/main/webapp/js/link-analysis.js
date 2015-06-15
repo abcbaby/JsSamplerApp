@@ -10,14 +10,12 @@ var LinkAnalysisModel = Backbone.Model.extend({
 var LinkAnalysisView = Backbone.View.extend({
 	el : $("#manualSearch"),
     initialize: function(){
-		_.bindAll(this, 'render', 'search', 'reset', 'clear');
-		
-		this.render(); // not all views are self-rendering. This one is.
+		this.render();
 	},
 	events : {
 		'click #laSearchBtn' : 'search',
-		'click #laResetBtn' : 'reset',
 		'click #laClearBtn' : 'clear',
+		'click #laI2ExportBtn' : 'i2Export',
 		'click #udBtn' : 'layoutUd',
 		'click #duBtn' : 'layoutDu',
 		'click #lrBtn' : 'layoutLr',
@@ -25,55 +23,56 @@ var LinkAnalysisView = Backbone.View.extend({
 		'click #defaultLayoutBtn' : 'defaultLayout'
 	},
 	search: function() {
-		this.model.set('query', this.$el.find('#laSearchTxt').val()); 
-		this.model.set('rows', this.$el.find('#laRows').val()); 
-		var postData = {
-			"query": this.model.get('query'),
-			"rows": this.model.get('rows'),
-		    "start": 0,
-		    "matchAll": true,
-		    "newSearch": true
-		};
-		if ($("#laFilterQuery").val()) {
-			postData.filterQuery = { "AFI__DOC_TYPE_t": [ $("#laFilterQuery").val() ] };
+		var qry = $('#laSearchTxt').val().trim();
+
+		if (qry == '') {
+			ALERT.info("Please enter a search");
+		} else {
+			this.model.set('query', qry); 
+			this.model.set('rows', this.$el.find('#laRows').val()); 
+			var postData = {
+				"query": this.model.get('query'),
+				"rows": this.model.get('rows'),
+			    "start": 0,
+			    "matchAll": true,
+			    "newSearch": true
+			};
+			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'));
+			search(postData);
+			disableI2Export(true);
 		}
-		if ($("#laFacet").val()) {
-			postData.facet = true;
-			postData.facetMethod = "fc";
-			postData.facetField = $("#laFacet").val();
-		}
-		search(postData);
-		ALERT.info("Retrieved " + this.model.get('rows') + " documents with query, " + this.model.get('query'));
 	},
 	layoutUd: function() {
-		draw({ hierarchical: { direction: "UD" } });
+		draw({ hierarchical: { direction: "UD", levelSeparation: 150 } });
 		reCluster()
 	},
 	layoutDu: function() {
-		draw({ hierarchical: { direction: "DU" } });
+		draw({ hierarchical: { direction: "DU", levelSeparation: 150 } });
 		reCluster()
 	},
 	layoutLr: function() {
-		draw({ hierarchical: { direction: "LR" } });
+		draw({ hierarchical: { direction: "LR", levelSeparation: 150 } });
 		reCluster()
 	},
 	layoutRl: function() {
-		draw({ hierarchical: { direction: "RL" } });
+		draw({ hierarchical: { direction: "RL", levelSeparation: 150 } });
 		reCluster()
 	},
 	defaultLayout: function() {
 		draw({});
 		reCluster()
 	},
-	reset: function() {
-		initDraw({nodes: {}, edges: {}});	
-		var queryStr = getUrlVars();
-		initDraw(loadJson("/network/data.json"));
-	},
 	clear: function() {
 		initDraw({nodes: {}, edges: {}});		
 	},
+	i2Export: function() {
+		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
+		window.location.href = "/search/api/linkanalysis/i2export" + queryParams;
+	},
 	render : function () {
+		//this.$el.find('#laSearchTxt').val(decodeURI(this.model.get('query')));
+		$('#laSearchTxt').val('test');
+		
 		var theTemplateScript = $("#hb-rows").html();
 		var theTemplate = Handlebars.compile(theTemplateScript);
 		var availableRows = [1, 5, 10, 15, 20];
@@ -88,8 +87,12 @@ var LinkAnalysisView = Backbone.View.extend({
 	}
 });
 
+function startsWith(str, prefix) {
+    return str.substring(0, prefix.length) === prefix;
+}
+
 function endsWith(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+	return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
 // Read a page's GET URL variables and return them as an associative array.
@@ -136,13 +139,38 @@ function search(postData) {
 			ALERT.status("Loading...");
 		},
 		error: function() {
-			var jsonData = loadJson("/network/addedData.json");			
+			var jsonData = loadAlready ? loadJson("/network/addedData.json") : loadJson("/network/data.json");	
+			loadAlready = true;
 			nodes.update(jsonData.nodes);
 			edges.update(jsonData.edges);
 		},
 		success : function(jsonData) {
-			nodes.update(jsonData.nodes);
-			edges.update(jsonData.edges);
+			var existNodeIds = [];
+			var existEdgeIds = [];
+			_.each(jsonData.nodes, function(it) {
+				existNodeIds.push(it.id);
+			})
+			_.each(jsonData.edges, function(it) {
+				existEdgeIds.push(it.id);
+			})
+			var existingNodes = nodes.get(existNodeIds);
+			var existingEdges = edges.get(existEdgeIds);
+			
+			var newNodes = [];
+			var newEdges = [];
+			_.each(jsonData.nodes, function(item) {
+				if (_.isUndefined(_.findWhere(existingNodes, {id: item.id}))) {
+					newNodes.push(item);
+				}
+			});
+			_.each(jsonData.edges, function(item) {
+				if (_.isUndefined(_.findWhere(existingEdges, {id: item.id}))) {
+					newEdges.push(item);
+				}
+			});
+			
+			nodes.update(newNodes);
+			edges.update(newEdges);
 		}
 	});
 	ALERT.clearStatus();
@@ -153,9 +181,9 @@ function clearSelection() {
 	network.selectEdges([]);
 }
 
-function initDraw(jsonData) {
-	nodes = new vis.DataSet(jsonData.nodes);
-	edges = new vis.DataSet(jsonData.edges);
+function initDraw() {
+	nodes = new vis.DataSet([]);
+	edges = new vis.DataSet([]);
 	draw({});
 }
 
@@ -163,6 +191,7 @@ function draw(customLayout) {
 	customLayout.randomSeed = 2;
 	var panelHeight = ($(window).height() - (($(".security-banner").height() * 2) + $(".navbar-header").height() + 50)) + "px";
 	var options = {
+		layout: customLayout,
 		height : panelHeight,
 		interaction: {
 	    	multiselect: true,
@@ -170,20 +199,28 @@ function draw(customLayout) {
 	    	keyboard: true
 	    },
 	    nodes: {
+	        scaling: {
+	            label: {
+	                min: 8,
+	                max: 30,
+	                drawThreshold: 12,
+	                maxVisible: 20
+	            }
+	        },
 	    	shadow: true
 	    },
         edges: {
-			smooth: false,
-			length : 400
+            smooth: {
+            	type: 'continuous'
+            },
+			length : 250
 		},
-		layout: customLayout,
 		physics : {
-			stabilization: true,
+			stabilization: false,
 			barnesHut : {
 				gravitationalConstant : -2000,
-				centralGravity : 0.1,
+				centralGravity : 0,
 				springLength : 100,
-				avoidOverlap: 0.75,
 				springConstant : 0.04,
 				damping : 0.09
 			}
@@ -204,7 +241,7 @@ function draw(customLayout) {
 	return network;
 }
 
-function createClusterNode(selectedNodes, cId, sameType) {
+function createClusterNode(selectedNodes, rId, sameType, resolveName) {
 	var largestNode = _.max(selectedNodes, function(e) {
 		return _.isUndefined(e.size)
 			? e.font.size
@@ -215,9 +252,9 @@ function createClusterNode(selectedNodes, cId, sameType) {
 		: largestNode.size) + 4;
 	return sameType
 		? {
-			id: cId, 
-			label: selectedNodes[0].type + ' [' + selectedNodes.length + ']', 
-			title: selectedNodes[0].type + ' [' + selectedNodes.length + ']', 
+			id: rId, 
+			label: resolveName + ' [' + selectedNodes.length + ']', 
+			title: resolveName + ' [' + selectedNodes.length + ']', 
 			type: selectedNodes[0].type, 
 			cluster: true,
 			size: imgSize, 
@@ -225,9 +262,9 @@ function createClusterNode(selectedNodes, cId, sameType) {
 			image: selectedNodes[0].image
 		}
 		: {
-			id: cId, 
-			label: 'Cluster ' + clusterId + ' [' + selectedNodes.length + ']', 
-			title: 'Cluster ' + clusterId + ' [' + selectedNodes.length + ']', 
+			id: rId, 
+			label: resolveName + ' [' + selectedNodes.length + ']', 
+			title: resolveName + ' [' + selectedNodes.length + ']', 
 			type: 'Mixed',
 			cluster: true,
 			font: {size: imgSize},
@@ -236,8 +273,8 @@ function createClusterNode(selectedNodes, cId, sameType) {
 }
 
 function reCluster() {
-	for (var i = 0; i < clusterId; i++) {
-		var c = nodes.get('clusterId-' + i);
+	for (var i = 1; i <= resolveId; i++) {
+		var c = nodes.get('resolveId-' + i);
 		if (c != null) {
 			loadCluster(c);
 		}
@@ -252,6 +289,14 @@ function loadCluster(cluster) {
 			clusterNodeProperties: cluster
 		}
 		network.cluster(clusterOptionsByData);
+}
+
+function disableI2Export(disableI2) {
+	$("#laI2ExportBtn").prop("disabled", disableI2);
+}
+
+function isUnfielded(txt) {
+	return txt.indexOf(" (UNFIELDED") !== -1;
 }
 
 function registerListeners() {
@@ -275,10 +320,11 @@ function registerListeners() {
 				return network.isCluster(e);
 			});
 			var content  = {
+				viewProperties: !network.isCluster(e.nodes[0]) && e.nodes.length == 1,
 				seeAlso: seeAlsoList,
 				canCluster: e.nodes.length > 1,
 				canClusterExpand: canClusterExpand,
-				allowRemove: false};
+			};
 			var compiledHtml = theTemplate(content);
 			$contextMenu.html(compiledHtml);
 			$contextMenu.css({
@@ -298,39 +344,115 @@ function registerListeners() {
 			case "View Detail":
 				ALERT.info("Detail not implemented yet!");
 				break;
-			case "Remove":
-				if (_.isEmpty(selection.edges)) {
-					nodes.remove(selection.nodes);
-					edges.remove(selection.edges);
-					if (!_.isEmpty(nodes.get())) {
-						network.popup.popupTargetId = nodes.get()[0].id;
-					}
+			case "Delete":
+				nodes.remove(selection.nodes);
+				edges.remove(selection.edges);
+				if (!_.isEmpty(nodes.get()) && !_.isUndefined(network.popup) && !_.isUndefined(nodes.get()[0])) {
+					network.popup.popupTargetId = nodes.get()[0].id;
 				}
 				break;
-			case "Cluster":
-				var cId = 'clusterId-' + clusterId;
-				var selectedNodes = _.without(nodes.get(selection.nodes), null);
-				var sameType = _.every(selectedNodes, function(e) {
-					// don't compare by type, since person can be suspect or officer, which have diff. image
-					return selectedNodes[0].image == e.image;
-				});
-				_.each(selectedNodes, function(item) {
-					item[cId] = cId;
-				});
-				nodes.update(selectedNodes);
-				var cluster = createClusterNode(selectedNodes, cId, sameType);
-				nodes.update(cluster);
+			case "Resolve":
+				$("#resolveName").val("");
 
-				loadCluster(cluster);
-				clusterId++;
+				var theTemplateScript = $("#hb-resolve-input").html();
+				var theTemplate = Handlebars.compile(theTemplateScript);
+				var compiledHtml = theTemplate(content);
+				$("#resolveInputForm").html(compiledHtml);
+				
+				$('#resolveInputPanelId').puidialog({
+			        showEffect: 'fade',
+			        hideEffect: 'fade',
+			        minimizable: false,
+			        maximizable: false,
+			        draggable: false,
+			        responsive: true,
+			        modal: false,
+			        buttons: [{
+		                text: 'OK',
+		                click: function() {
+		            		var selection = network.getSelection();
+		    				var resolveName = $("#resolveName").val().trim();
+		    				if (resolveName == "") {
+		    					resolveName = 'Resolve ' + resolveId;
+		    				}
+		    									
+		    				var rId = 'resolveId-' + resolveId;
+		    				var selectedNodes = _.without(nodes.get(selection.nodes), null);
+	    					var sameType = !_.some(selection.nodes, function(e) {
+	    						return network.isCluster(e);
+		    				});
+		    				if (sameType) {
+			    				sameType = _.every(selectedNodes, function(e) {
+			    					// don't compare by type, since person can be suspect or officer, which have diff. image
+			    					return selectedNodes[0].image == e.image;
+			    				});
+	    					}
+		    					
+		    				_.each(selectedNodes, function(item) {
+		    					item[rId] = rId;
+		    				});
+		    				nodes.update(selectedNodes);
+		    				var cluster = createClusterNode(selectedNodes, rId, sameType, resolveName);
+		    				nodes.update(cluster);
+
+		    				loadCluster(cluster);
+		    				resolveId++;
+		    				clearSelection();
+		    				
+		                    $('#resolveInputPanelId').puidialog('hide');
+		                }
+		            }]
+			    });
+				$('#resolveInputPanelId').puidialog('show');
+				
 				break;
-			case "Cluster Expand":
+			case "Un-Resolve":
 				_.each(selection.nodes, function(item) {
 					if (network.isCluster(item)) {
 						network.openCluster(item);
 						nodes.remove(item);
 					}
 				});
+				break;
+			case "Properties":
+				var selectedNodes = nodes.get(selection.nodes);
+				if (!_.isUndefined(selectedNodes[0])) {
+					var idStr = selectedNodes[0]['id'].replace(/[^a-z\d]/gi, '-').toLowerCase();
+					var dialogId = idStr + "-dialog";
+					
+					var len = $("#" + dialogId).length;
+					
+					if($("#" + dialogId).length == 0) {
+						var theTemplateScript = $("#hb-properties-dialog").html();
+						var theTemplate = Handlebars.compile(theTemplateScript);
+						var content  = {
+							dialogId: dialogId,
+							selectedNode: selectedNodes[0]
+						};
+						var compiledHtml = theTemplate(content);
+						
+						$("#propertiesDialogs").append(compiledHtml);
+						
+					    $("#" + dialogId).puidialog({
+					        showEffect: 'fade',
+					        hideEffect: 'fade',
+					        width: 700,
+					        height: 600,
+					        minimizable: true,
+					        maximizable: false,
+					        draggable: true,
+					        responsive: true,
+					        modal: false,
+					    });
+					    
+					    // put above the classifcation banner when minimizied
+					    $(".pui-dialog-docking-zone").css({
+					        bottom: "25px"
+					    });
+					}
+				    
+				    $("#" + dialogId).puidialog('show');
+				}
 				break;
 			default:
 				if (selectedMenuItem != "See Also") {
@@ -342,34 +464,29 @@ function registerListeners() {
 					});
 					if (!_.isUndefined(seeAlsoItem) && !_.isNull(seeAlsoItem)) {
 						var rows = $('#laRows').val();
-						
 						var queryType = seeAlsoItem.queries.and; // default to and
-						if (endsWith(selectedMenuItem, " (OR)")) {
+						if (endsWith(selectedMenuItem, "-OR)")) {
 							queryType = seeAlsoItem.queries.or;
 						}
 						
+						var query = isUnfielded(selectedMenuItem) ? queryType.unfielded : queryType.fielded;
+						
 						var postData = {
-							"query": queryType.fielded,
+							"query": query,
 						    "start": 0,
 						    "rows": rows,
 						    "matchAll": true,
 						    "newSearch": true
 						};
-						if ($("#laFilterQuery").val()) {
-							postData.filterQuery = { "AFI__DOC_TYPE_t": [ $("#laFilterQuery").val() ] };
-						}
-						if ($("#laFacet").val()) {
-							postData.facet = true;
-							postData.facetMethod = "fc";
-							postData.facetField = $("#laFacet").val();
-						}
+						ALERT.info("Retrieving " + rows + " document(s) with query, " + query);
 						search(postData);
-						ALERT.info("Retrieved " + rows + " documents with query, " + queryType.fielded);
-	
+						disableI2Export(true);
 					}
 				}
 		}
-		clearSelection();
+		if (selectedMenuItem != "Resolve") {
+			clearSelection();
+		}
 		$contextMenu.hide();
 	});
 
@@ -380,37 +497,66 @@ function registerListeners() {
 
 var nodes, edges, network;
 var queryList = [];
-var clusterId = 0;
+var resolveId = 1;
+var loadAlready = false;
+
 
 $(document).ready(function() {
 	var queryStr = getUrlVars();
-	var jsonData = loadJson("/network/data.json");
+	
+	initDraw();
 
-	initDraw(jsonData);
-
-	if (jsonData.nodes.length == 0) {
+	var laView = new LinkAnalysisView({
+		model : new LinkAnalysisModel({ 
+			query: queryStr.query,
+			rows: queryStr.rows, 
+			filterQuery: queryStr.filterQuery,
+			facetField: queryStr.facetField 
+		})
+	});
+	
+	laView.search();
+	disableI2Export(false);
+	
+	if (nodes.length == 0) {
 		ALERT.warning("Data cannot be represented in the chart! Please try again.");
 	}
-	
-	// some json data have not been pulled yet, therefore, need timeout, otherwise, IE *sometimes* fail
-	setTimeout(function(){
-		laView = new LinkAnalysisView({
-			model : new LinkAnalysisModel({ 
-				rows: queryStr.rows, 
-				filterQuery: queryStr.filterQuery,
-				facetField: queryStr.facetField 
-			})
-		});
-	}, 500);
+
 });
 
 Handlebars.registerHelper('addDivider', function (index) {
 	return index == 0 ? "" : "<li class=\"divider\"></li>";
 });	
+
+Handlebars.registerHelper('getProperties', function (obj) {
+	var str = '';
+	str += '<tr>';
+	str += '<td>Document ID</td>';
+	str += '<td>' + obj['sourceAfiDocId'] + '</td>';
+	str += '</tr>';
+	if (startsWith(obj['image'], "data:")) {
+		str += '<tr>';
+		str += '<td>Image</td>';
+		str += '<td><img src="' + obj['image'] + '" height="200px" width="200px"></td>';
+		str += '</tr>';
+	}
+	for (var propertyName in obj.values) {
+		if (propertyName == "imageContent") {
+			continue;
+		}
+		var name = propertyName.split(/(?=[A-Z])/).join(" ");
+		str += '<tr>';
+		str += '<td class="capitalize">' + name + '</td>';
+		str += '<td>' + obj.values[propertyName] + '</td>';
+		str += '</tr>';
+	}
+	
+	return str;
+});	
 	        		
 Handlebars.registerHelper('loadSeeAlso', function (displayValue) {
-	return displayValue.indexOf(" ") == -1
-		? "<li><a href=\"#\">" + displayValue + "</a></li>\n"
-		: "<li><a href=\"#\">" + displayValue + " (AND)</a></li>\n" 
-			+ "<li><a href=\"#\">" + displayValue + " (OR)</a></li>\n"; 
+	return "<li><a href=\"#\">" + displayValue + " (FIELDED-AND)</a></li>\n" 
+			+ "<li><a href=\"#\">" + displayValue + " (FIELDED-OR)</a></li>\n" 
+			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED-AND)</a></li>\n" 
+			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED-OR)</a></li>\n";
 });	

@@ -5,81 +5,138 @@
 <meta charset="UTF-8">
 <title>Network | node as icon</title>
 
-<script type="text/javascript" src="/js/vis/vis.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script type="text/javascript" src="network_files/bootstrap.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-growl/1.0.0/jquery.bootstrap-growl.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
-<script type="text/javascript" src="/js/utils.js"></script>
-
 <link href="/js/vis/vis.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 <link href="/css/bootstrap-dropdown.css" rel="stylesheet" type="text/css">
+<link href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
 <link href="network_files/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/js/primeui-1.1/themes/bootstrap/theme.css" rel="stylesheet" type="text/css" />
+<link href="/js/primeui-1.1/primeui-1.1-min.css" rel="stylesheet" type="text/css" />
+
 <style>
+// Boostrap 3+ removes dropdown submenu, so have to manually define it
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu>.dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    -webkit-border-radius: 0 6px 6px 6px;
+    -moz-border-radius: 0 6px 6px;
+    border-radius: 0 6px 6px 6px;
+}
+
+.dropdown-submenu:hover>.dropdown-menu {
+    display: block;
+}
+
+.dropdown-submenu>a:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #ccc;
+    margin-top: 5px;
+    margin-right: -10px;
+}
+
+.dropdown-submenu:hover>a:after {
+    border-left-color: #fff;
+}
+
+.dropdown-submenu.pull-left {
+    float: none;
+}
+
+.dropdown-submenu.pull-left>.dropdown-menu {
+    left: -100%;
+    margin-left: 10px;
+    -webkit-border-radius: 6px 0 6px 6px;
+    -moz-border-radius: 6px 0 6px 6px;
+    border-radius: 6px 0 6px 6px;
+}
+
+.dropdown-menu {
+    font-size: 85%;
+}
+
 #network {
 	background-color: whitesmoke;
 }
+
 #contextMenu {
 	position: absolute;
 	z-index: 9999;
 	display: none;
-}}
+}
+
+.capitalize {
+	text-transform:capitalize;
+}
+
+.pui-dialog {
+	z-index: 1050 !important;
+}
 </style>
 
 </head>
 
 <body>
-<div id="contextMenu" class="dropdown clearfix"></div>
-
-<div id="content" class="content">
 	<ul>
 		<li>Just click the "Link" button - simulating a search</li>
 		<li>Select a node and right-mouse click, "See Also" (refresh page if you have done the previous step, since pulling in same data)</li>
 		<li>Select multiple node (by hold down the Ctrl key) and right-mouse click (with same image)</li>
 		<li>Select multiple node (by hold down the Ctrl key) and right-mouse click (with different image)</li>
 	</ul>
-	<div id="manualSearch" class="row">
-		<div class="col-md-11">
-			<form class="form-inline" onsubmit="return false;">
-				<div class="form-group">
-					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
-				</div>
-				<div class="form-group laRows">
-					<select id="laRows" class="form-control"></select>
-				</div>
-				<div class="form-group">
-					<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
-				</div>
-				<div class="form-group">
-					<div class="dropdown">
-					    <button class="btn btn-default dropdown-toggle fa fa-cog" type="button" data-toggle="dropdown"> Options
-					    <span class="caret"></span></button>
-					    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-					    	<li id="laResetBtn"><a role="menuitem" tabindex="-1" href="#">Reset</a></li>
-					    	<li id="laClearBtn"><a role="menuitem" tabindex="-1" href="#">Clear</a></li>
-					    	<li class="divider"></li>
-					    	<li class="dropdown-submenu">
-				                <a tabindex="-1" href="#">Layouts</a>
-				                <ul class="dropdown-menu">
-							    	<li id="udBtn"><a role="menuitem" tabindex="-1" href="#">Up-Down</a></li>
-							    	<li id="duBtn"><a role="menuitem" tabindex="-1" href="#">Down-Up</a></li>
-							    	<li id="lrBtn"><a role="menuitem" tabindex="-1" href="#">Left-Right</a></li>
-							    	<li id="rlBtn"><a role="menuitem" tabindex="-1" href="#">Right-Left</a></li>
-							    	<li class="divider"></li>
-							    	<li id="defaultLayoutBtn"><a role="menuitem" tabindex="-1" href="#">Default</a></li>
-				                </ul>
-				            </li>
-					    </ul>
-					</div>
-				</div>
-			</form>
-		</div>
+
+
+<script id="hb-resolve-input" type="text/x-handlebars-template">
+<div id="resolveInputPanelId" title="Resolve Name">
+	<div class="col-md-12">
+		<input id="resolveName" placeholder="Enter name" class="form-control input-md" size="25" type="text">
 	</div>
-	
-	<div id="network"></div>
 </div>
+</script>
+
+<script id="hb-properties-dialog" type="text/x-handlebars-template">
+<div id="{{dialogId}}" title="{{selectedNode.type}} Info">
+	<table class="table table-striped table-bordered">
+	    <thead>
+			<tr>
+			    <th>Name</th>
+			    <th>Value</th>
+			</tr>
+	    </thead>
+	    <tbody>
+	    	{{{getProperties selectedNode}}}
+	    </tbody>
+	</table>
+</div>	
+</script>
+
+<script id="hb-view-properties" type="text/x-handlebars-template">
+<div id="propertiesId">
+<table class="table">
+    <thead>
+		<tr>
+		    <th>Name</th>
+		    <th>Value</th>
+		</tr>
+    </thead>
+    <tbody>
+    	{{{getProperties selectedNode}}}
+    </tbody>
+  </table>
+</div>
+</script>
 
 <script id="hb-context-menu" type="text/x-handlebars-template">
 	<ul id="networkContextMenuId" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display: block; position: static; margin-bottom: 5px;">
@@ -99,10 +156,10 @@
 		<li><a tabindex="-1">Merge</a></li>
 		<li class="divider"></li>
 		{{/if}}
-		{{#if this.canCluster}}<li><a tabindex="-1">Cluster</a></li>{{/if}}
-		{{#if this.canClusterExpand}}<li><a tabindex="-1">Cluster Expand</a></li>{{/if}}
-		<li class="disabled"><a tabindex="-1">View Detail</a></li>
-		{{#if this.allowRemove}}<li><a tabindex="-1">Remove</a></li>{{/if}}
+		{{#if this.canCluster}}<li><a tabindex="-1">Resolve</a></li>{{/if}}
+		{{#if this.canClusterExpand}}<li><a tabindex="-1">Un-Resolve</a></li>{{/if}}
+		<li><a tabindex="-1">Delete</a></li>
+		{{#if this.viewProperties}}<li><a tabindex="-1">Properties</a></li>{{/if}}
 	</ul>
 </script>
 
@@ -112,6 +169,67 @@
 	{{/each}}
 </script>
 
+<div id="content" class="content">
+	<div id="manualSearch" class="row">
+		<div class="col-md-11">
+			<form class="form-inline" onsubmit="return false;">
+				<div class="form-group">
+					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
+				</div>
+				<div class="form-group laRows">
+					<select id="laRows" class="form-control"></select>
+				</div>
+				<div class="form-group">
+					<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
+				</div>
+				<div class="form-group">
+					<div class="dropdown">
+					    <button class="btn btn-default dropdown-toggle fa fa-cog" type="button" data-toggle="dropdown"> Options
+					    <span class="caret"></span></button>
+					    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+					    	<li id="laClearBtn"><a role="menuitem" tabindex="-1" href="#">Clear</a></li>
+					    	<li class="divider"></li>
+					    	<li class="dropdown-submenu">
+				                <a tabindex="-1" href="#">Layouts</a>
+				                <ul class="dropdown-menu">
+							    	<li id="udBtn"><a role="menuitem" tabindex="-1" href="#">Up-Down</a></li>
+							    	<li id="duBtn"><a role="menuitem" tabindex="-1" href="#">Down-Up</a></li>
+							    	<li id="lrBtn"><a role="menuitem" tabindex="-1" href="#">Left-Right</a></li>
+							    	<li id="rlBtn"><a role="menuitem" tabindex="-1" href="#">Right-Left</a></li>
+							    	<li class="divider"></li>
+							    	<li id="defaultLayoutBtn"><a role="menuitem" tabindex="-1" href="#">Default</a></li>
+				                </ul>
+				            </li>
+					    </ul>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="col-md-1">
+			<button type="button" id="laI2ExportBtn" class="btn btn-primary fa fa-download"> i2 Export</button>
+		</div>
+	</div>
+	
+	<div id="network"/>
+</div>
+	
+<div id="contextMenu" class="dropdown clearfix"></div>
+
+<div id="resolveInputForm"></div>
+
+<div id="propertiesDialogs"></div>
+
+<!--  NEED TO PUT THESE JS ON BOTTOM OF PAGE, OTHERWISE, BACKBONE.JS MAY NOT LOAD PROPERLY!!! -->
+<script type="text/javascript" src="/js/vis/vis.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="http://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+<script type="text/javascript" src="network_files/bootstrap.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-growl/1.0.0/jquery.bootstrap-growl.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+<script src="/js/primeui-1.1/primeui-1.1-min.js"></script>
+<script type="text/javascript" src="/js/utils.js"></script>
 <script type="text/javascript" src="/js/link-analysis.js"></script>
 
 </body>
