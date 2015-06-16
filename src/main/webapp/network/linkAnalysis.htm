@@ -14,60 +14,6 @@
 <link href="/js/primeui-2.0/primeui-2.0-min.css" rel="stylesheet" type="text/css" />
 
 <style>
-// Boostrap 3+ removes dropdown submenu, so have to manually define it
-
-.dropdown-submenu {
-    position: relative;
-}
-
-.dropdown-submenu>.dropdown-menu {
-    top: 0;
-    left: 100%;
-    margin-top: -6px;
-    margin-left: -1px;
-    -webkit-border-radius: 0 6px 6px 6px;
-    -moz-border-radius: 0 6px 6px;
-    border-radius: 0 6px 6px 6px;
-}
-
-.dropdown-submenu:hover>.dropdown-menu {
-    display: block;
-}
-
-.dropdown-submenu>a:after {
-    display: block;
-    content: " ";
-    float: right;
-    width: 0;
-    height: 0;
-    border-color: transparent;
-    border-style: solid;
-    border-width: 5px 0 5px 5px;
-    border-left-color: #ccc;
-    margin-top: 5px;
-    margin-right: -10px;
-}
-
-.dropdown-submenu:hover>a:after {
-    border-left-color: #fff;
-}
-
-.dropdown-submenu.pull-left {
-    float: none;
-}
-
-.dropdown-submenu.pull-left>.dropdown-menu {
-    left: -100%;
-    margin-left: 10px;
-    -webkit-border-radius: 6px 0 6px 6px;
-    -moz-border-radius: 6px 0 6px 6px;
-    border-radius: 6px 0 6px 6px;
-}
-
-.dropdown-menu {
-    font-size: 85%;
-}
-
 #network {
 	background-color: whitesmoke;
 }
@@ -101,7 +47,7 @@
 <script id="hb-resolve-input" type="text/x-handlebars-template">
 <div id="resolveInputPanelId" title="Resolve Name">
 	<div class="col-md-12">
-		<input id="resolveName" placeholder="Enter name" class="form-control input-md" size="25" type="text">
+		<input id="resolveName" placeholder="Enter name" class="form-control input-md" size="25" type="text" value="{{resolveName}}">
 	</div>
 </div>
 </script>
@@ -119,7 +65,7 @@
 	    	{{{getProperties selectedNode}}}
 	    </tbody>
 	</table>
-</div>
+</div>	
 </script>
 
 <script id="hb-view-properties" type="text/x-handlebars-template">
@@ -169,12 +115,31 @@
 	{{/each}}
 </script>
 
+<script id="hb-filter-query" type="text/x-handlebars-template">
+	<option value="">Data Source</option>
+	{{#each ds}}
+	<option value="{{this.id}}">{{this.name}}</option>
+	{{/each}}
+</script>
+
+<script id="hb-facets" type="text/x-handlebars-template">
+	{{#each facets}}
+	<option value="{{this.field}}">{{this.label}}</option>
+	{{/each}}
+</script>
+
 <div id="content" class="content">
 	<div id="manualSearch" class="row">
-		<div class="col-md-11">
+		<div class="col-md-12">
 			<form class="form-inline" onsubmit="return false;">
 				<div class="form-group">
 					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
+				</div>
+				<div class="form-group laFacet">
+					<select id="laFacet" class="form-control"></select>
+				</div>
+				<div class="form-group laFilterQuery">
+					<select id="laFilterQuery" class="form-control"></select>
 				</div>
 				<div class="form-group laRows">
 					<select id="laRows" class="form-control"></select>
@@ -183,33 +148,32 @@
 					<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
 				</div>
 				<div class="form-group">
-					<div class="dropdown">
-					    <button class="btn btn-default dropdown-toggle fa fa-cog" type="button" data-toggle="dropdown"> Options
-					    <span class="caret"></span></button>
-					    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-					    	<li id="laClearBtn"><a role="menuitem" tabindex="-1" href="#">Clear</a></li>
-					    	<li class="divider"></li>
-					    	<li class="dropdown-submenu">
-				                <a tabindex="-1" href="#">Layouts</a>
-				                <ul class="dropdown-menu">
-							    	<li id="udBtn"><a role="menuitem" tabindex="-1" href="#">Up-Down</a></li>
-							    	<li id="duBtn"><a role="menuitem" tabindex="-1" href="#">Down-Up</a></li>
-							    	<li id="lrBtn"><a role="menuitem" tabindex="-1" href="#">Left-Right</a></li>
-							    	<li id="rlBtn"><a role="menuitem" tabindex="-1" href="#">Right-Left</a></li>
-							    	<li class="divider"></li>
-							    	<li id="defaultLayoutBtn"><a role="menuitem" tabindex="-1" href="#">Default</a></li>
-				                </ul>
-				            </li>
-					    </ul>
-					</div>
+					<button id="optionsTrigger" class="btn btn-default fa fa-cog">Options</button>
+					<ul id="optionsMenu">
+					    <li id="laClearBtn"><a data-icon="fa-file-o" href="#">Clear</a></li>
+					    <li>
+					    	<a data-icon="fa-sitemap">Layouts</a>
+					        <ul> 
+					            <li id="udBtn"><a data-icon="fa-arrow-down" href="#">Up-Down</a></li>
+						    	<li id="duBtn"><a data-icon="fa-arrow-up" href="#">Down-Up</a></li>
+						    	<li id="lrBtn"><a data-icon="fa-arrow-right" href="#">Left-Right</a></li>
+						    	<li id="rlBtn"><a data-icon="fa-arrow-left" href="#">Right-Left</a></li>
+						    	<li id="defaultLayoutBtn"><a data-icon="fa-arrows" href="#">Default</a></li>
+					        </ul>
+					    </li>
+					    <li>
+					    	<a data-icon="fa-download">i2 Export</a>
+					        <ul> 
+					            <li id="laI2ExportBtn"><a data-icon="fa-eye" href="#">i2 Viewer</a></li>
+						    	<li id="laI2XmlExportBtn"><a data-icon="fa-file-code-o" href="#">i2 iXv (XML)</a></li>
+					        </ul>
+					    </li>
+					</ul>
 				</div>
 			</form>
 		</div>
-		<div class="col-md-1">
-			<button type="button" id="laI2ExportBtn" class="btn btn-primary fa fa-download"> i2 Export</button>
-		</div>
 	</div>
-
+	
 	<div id="network"/>
 </div>
 

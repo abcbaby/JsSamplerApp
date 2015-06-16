@@ -4,43 +4,75 @@ var LinkAnalysisModel = Backbone.Model.extend({
         rows: "10",
         filterQuery: "",
     	facetField: ""
-    },
+    },    
 });
 
 var LinkAnalysisView = Backbone.View.extend({
 	el : $("#manualSearch"),
-    initialize: function(){
+	initialize: function(){
 		this.render();
 	},
 	events : {
-		'click #laSearchBtn' : 'search',
+		'click #laSearchBtn' : 'search'
+	},
+	search: function() {
+		var qry = this.$el.find('#laSearchTxt').val().trim();
+		if (qry == '') {
+			ALERT.info("Please enter a search");
+		} else {
+			this.model.set('query', qry); 
+			this.model.set('rows', this.$el.find('#laRows').val()); 
+			var postData = {
+					"query": this.model.get('query'),
+					"rows": this.model.get('rows'),
+					"start": 0,
+					"matchAll": true,
+					"newSearch": true
+			};
+			if ($("#laFilterQuery").val() || this.model.get("filterQuery")) {
+				postData.filterQuery = { "AFI__DOC_TYPE_t": 
+					[ $("#laFilterQuery").val() ? $("#laFilterQuery").val() : this.model.get("filterQuery") ] 
+				};
+			}
+			if ($("#laFacet").val()) {
+				postData.facet = true;
+				postData.facetMethod = "fc";
+				postData.facetField = $("#laFacet").val();
+			}
+			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'));
+			search(postData);
+			disableI2Export(true);
+		}
+	},
+	render : function () {
+		//this.$el.find('#laSearchTxt').val(decodeURI(this.model.get('query')));
+		$('#laSearchTxt').val('test');
+		
+		var theTemplateScript = $("#hb-rows").html();
+		var theTemplate = Handlebars.compile(theTemplateScript);
+		var availableRows = [1, 5, 10, 15, 20];
+		if (_.indexOf(availableRows, parseInt(this.model.get('rows'))) == -1) {
+			availableRows.push(this.model.get('rows'));
+		}
+		var content  = { rows : availableRows };
+		var compiledHtml = theTemplate(content);
+		
+		this.$el.find('#laRows').html(compiledHtml);
+		$('div.laRows select').val(this.model.get('rows'));
+	}
+});
+
+var LinkAnalysisOptionsView = Backbone.View.extend({
+	el : $("#optionsMenu"),
+	events : {
 		'click #laClearBtn' : 'clear',
 		'click #laI2ExportBtn' : 'i2Export',
+		'click #laI2XmlExportBtn' : 'i2XmlExport',
 		'click #udBtn' : 'layoutUd',
 		'click #duBtn' : 'layoutDu',
 		'click #lrBtn' : 'layoutLr',
 		'click #rlBtn' : 'layoutRl',
 		'click #defaultLayoutBtn' : 'defaultLayout'
-	},
-	search: function() {
-		var qry = $('#laSearchTxt').val().trim();
-
-		if (qry == '') {
-			ALERT.info("Please enter a search");
-		} else {
-			this.model.set('query', qry);
-			this.model.set('rows', this.$el.find('#laRows').val());
-			var postData = {
-				"query": this.model.get('query'),
-				"rows": this.model.get('rows'),
-			    "start": 0,
-			    "matchAll": true,
-			    "newSearch": true
-			};
-			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'));
-			search(postData);
-			disableI2Export(true);
-		}
 	},
 	layoutUd: function() {
 		draw({ hierarchical: { direction: "UD", levelSeparation: 150 } });
@@ -63,27 +95,15 @@ var LinkAnalysisView = Backbone.View.extend({
 		reCluster()
 	},
 	clear: function() {
-		initDraw({nodes: {}, edges: {}});
+		initDraw();		
 	},
 	i2Export: function() {
 		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-		window.location.href = "/search/api/linkanalysis/i2export" + queryParams;
+		window.location.href = "/search/api/linkanalysis/i2export.jnlp?" + queryParams;
 	},
-	render : function () {
-		//this.$el.find('#laSearchTxt').val(decodeURI(this.model.get('query')));
-		$('#laSearchTxt').val('test');
-
-		var theTemplateScript = $("#hb-rows").html();
-		var theTemplate = Handlebars.compile(theTemplateScript);
-		var availableRows = [1, 5, 10, 15, 20];
-	    if (_.indexOf(availableRows, parseInt(this.model.get('rows'))) == -1) {
-	    	availableRows.push(this.model.get('rows'));
-	    }
-		var content  = { rows : availableRows };
-		var compiledHtml = theTemplate(content);
-
-		this.$el.find('#laRows').html(compiledHtml);
-		$('div.laRows select').val(this.model.get('rows'));
+	i2XmlExport: function() {
+		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
+		window.location.href = "/search/api/linkanalysis/i2download?" + queryParams;
 	}
 });
 
@@ -145,35 +165,46 @@ function search(postData) {
 			edges.update(jsonData.edges);
 		},
 		success : function(jsonData) {
-			var existNodeIds = [];
-			var existEdgeIds = [];
-			_.each(jsonData.nodes, function(it) {
-				existNodeIds.push(it.id);
-			})
-			_.each(jsonData.edges, function(it) {
-				existEdgeIds.push(it.id);
-			})
-			var existingNodes = nodes.get(existNodeIds);
-			var existingEdges = edges.get(existEdgeIds);
-
-			var newNodes = [];
-			var newEdges = [];
-			_.each(jsonData.nodes, function(item) {
-				if (_.isUndefined(_.findWhere(existingNodes, {id: item.id}))) {
-					newNodes.push(item);
-				}
-			});
-			_.each(jsonData.edges, function(item) {
-				if (_.isUndefined(_.findWhere(existingEdges, {id: item.id}))) {
-					newEdges.push(item);
-				}
-			});
-
-			nodes.update(newNodes);
-			edges.update(newEdges);
+			syncNetwork(jsonData);
 		}
 	});
 	ALERT.clearStatus();
+}
+
+function syncNetwork(jsonData) {
+	var newNodes = [];
+	var newEdges = [];
+	// don't bring in nodes/edges that has already been removed by user
+	_.each(jsonData.nodes, function(it) {
+		if (nodesDeleted.get(it.id) == null) {
+			newNodes.push(it);
+		}
+	})
+	_.each(jsonData.edges, function(it) {
+		if (edgesDeleted.get(it.id) == null) {
+			newEdges.push(it);
+		}
+	})
+	
+	var newNodes2 = [];
+	var newEdges2 = [];
+	// don't bring in nodes/edges that already exists
+	_.each(newNodes, function(it) {
+		if (nodes.get(it.id) == null) {
+			newNodes2.push(it);
+		}
+	})
+	_.each(newEdges, function(it) {
+		if (edges.get(it.id) == null) {
+			newEdges2.push(it);
+		}
+	})
+	
+	nodes.update(newNodes2);
+	edges.update(newEdges2);
+	
+	unCluster();
+	reCluster();
 }
 
 function clearSelection() {
@@ -184,6 +215,8 @@ function clearSelection() {
 function initDraw() {
 	nodes = new vis.DataSet([]);
 	edges = new vis.DataSet([]);
+	nodesDeleted = new vis.DataSet([]);
+	edgesDeleted = new vis.DataSet([]);
 	draw({});
 }
 
@@ -235,7 +268,7 @@ function draw(customLayout) {
 		edges : edges
 	};
 	network = new vis.Network(container, data, options);
-
+	
 	registerListeners();
 
 	return network;
@@ -247,29 +280,48 @@ function createClusterNode(selectedNodes, rId, sameType, resolveName) {
 			? e.font.size
 			: e.size;
 	});
-	var imgSize = parseInt(_.isUndefined(largestNode.size)
-		? largestNode.font.size
+	var imgSize = parseInt(_.isUndefined(largestNode.size) 
+		? largestNode.font.size 
 		: largestNode.size) + 4;
 	return sameType
 		? {
-			id: rId,
-			label: resolveName + ' [' + selectedNodes.length + ']',
-			title: resolveName + ' [' + selectedNodes.length + ']',
-			type: selectedNodes[0].type,
+			id: rId, 
+			label: resolveName + ' [' + selectedNodes.length + ']', 
+			title: resolveName + ' [' + selectedNodes.length + ']', 
+			type: selectedNodes[0].type, 
 			cluster: true,
-			size: imgSize,
-			shape: "image",
+			size: imgSize, 
+			shape: "image", 
 			image: selectedNodes[0].image
 		}
 		: {
-			id: rId,
-			label: resolveName + ' [' + selectedNodes.length + ']',
-			title: resolveName + ' [' + selectedNodes.length + ']',
+			id: rId, 
+			label: resolveName + ' [' + selectedNodes.length + ']', 
+			title: resolveName + ' [' + selectedNodes.length + ']', 
 			type: 'Mixed',
 			cluster: true,
 			font: {size: imgSize},
 			shape: 'box'
 		};
+}
+
+function unCluster() {
+	var allClusters = nodes.get({
+		filter: function (item) {
+			return item.cluster;
+		}
+	});
+	
+	var clusterIds = [];
+	_.each(allClusters, function(item) {
+		clusterIds.push(item.id);
+	});
+	
+	_.each(clusterIds, function(item) {
+		if (network.isCluster(item)) {
+			network.openCluster(item);
+		}
+	});
 }
 
 function reCluster() {
@@ -302,7 +354,7 @@ function isUnfielded(txt) {
 function registerListeners() {
 	// need to disabled right mouse click otherwise, the network right-mouse click menu will not display properly
 	document.body.oncontextmenu = function() {return false;}
-
+	
 	var $contextMenu = $("#contextMenu");
 
 	network.on("oncontext", function (e) {
@@ -345,6 +397,15 @@ function registerListeners() {
 				ALERT.info("Detail not implemented yet!");
 				break;
 			case "Delete":
+				// somehow some selection may have null values, so remove it
+				var selectedNodes = _.filter(nodes.get(selection.nodes), function(item) {
+					return item != null;
+				});
+				var selectedEdges = _.filter(edges.get(selection.edges), function(item) {
+					return item != null;
+				});
+				nodesDeleted.update(selectedNodes);
+				edgesDeleted.update(selectedEdges);
 				nodes.remove(selection.nodes);
 				edges.remove(selection.edges);
 				if (!_.isEmpty(nodes.get()) && !_.isUndefined(network.popup) && !_.isUndefined(nodes.get()[0])) {
@@ -352,13 +413,11 @@ function registerListeners() {
 				}
 				break;
 			case "Resolve":
-				$("#resolveName").val("");
-
 				var theTemplateScript = $("#hb-resolve-input").html();
 				var theTemplate = Handlebars.compile(theTemplateScript);
-				var compiledHtml = theTemplate(content);
+				var compiledHtml = theTemplate({resolveName: 'Resolve #' + resolveId});
 				$("#resolveInputForm").html(compiledHtml);
-
+				
 				$('#resolveInputPanelId').puidialog({
 			        showEffect: 'fade',
 			        hideEffect: 'fade',
@@ -373,10 +432,6 @@ function registerListeners() {
 		                click: function() {
 		            		var selection = network.getSelection();
 		    				var resolveName = $("#resolveName").val().trim();
-		    				if (resolveName == "") {
-		    					resolveName = 'Resolve ' + resolveId;
-		    				}
-
 		    				var rId = 'resolveId-' + resolveId;
 		    				var selectedNodes = _.without(nodes.get(selection.nodes), null);
 	    					var sameType = !_.some(selection.nodes, function(e) {
@@ -388,10 +443,11 @@ function registerListeners() {
 			    					return selectedNodes[0].image == e.image;
 			    				});
 	    					}
-
+		    					
 		    				_.each(selectedNodes, function(item) {
 		    					item[rId] = rId;
 		    				});
+
 		    				nodes.update(selectedNodes);
 		    				var cluster = createClusterNode(selectedNodes, rId, sameType, resolveName);
 		    				nodes.update(cluster);
@@ -399,13 +455,13 @@ function registerListeners() {
 		    				loadCluster(cluster);
 		    				resolveId++;
 		    				clearSelection();
-
+		    				
 		                    $('#resolveInputPanelId').puidialog('hide');
 		                }
 		            }]
 			    });
 				$('#resolveInputPanelId').puidialog('show');
-
+				
 				break;
 			case "Un-Resolve":
 				_.each(selection.nodes, function(item) {
@@ -420,9 +476,7 @@ function registerListeners() {
 				if (!_.isUndefined(selectedNodes[0])) {
 					var idStr = selectedNodes[0]['id'].replace(/[^a-z\d]/gi, '-').toLowerCase();
 					var dialogId = idStr + "-dialog";
-
-					var len = $("#" + dialogId).length;
-
+					
 					if($("#" + dialogId).length == 0) {
 						var theTemplateScript = $("#hb-properties-dialog").html();
 						var theTemplate = Handlebars.compile(theTemplateScript);
@@ -431,9 +485,9 @@ function registerListeners() {
 							selectedNode: selectedNodes[0]
 						};
 						var compiledHtml = theTemplate(content);
-
+						
 						$("#propertiesDialogs").append(compiledHtml);
-
+						
 					    $("#" + dialogId).puidialog({
 					        showEffect: 'fade',
 					        hideEffect: 'fade',
@@ -445,13 +499,13 @@ function registerListeners() {
 					        responsive: true,
 					        modal: false,
 					    });
-
+					    
 					    // put above the classifcation banner when minimizied
 					    $(".pui-dialog-docking-zone").css({
 					        bottom: "25px"
 					    });
 					}
-
+				    
 				    $("#" + dialogId).puidialog('show');
 				}
 				break;
@@ -459,8 +513,8 @@ function registerListeners() {
 				if (selectedMenuItem != "See Also") {
 					var selectedNodes = nodes.get(selection.nodes);
 					var seeAlsoItem = _.findWhere(selectedNodes[0].seeAlso, {
-						displayValue: selectedMenuItem.lastIndexOf(" ") == -1
-							? selectedMenuItem
+						displayValue: selectedMenuItem.lastIndexOf(" ") == -1 
+							? selectedMenuItem 
 							: selectedMenuItem.substring(0, selectedMenuItem.lastIndexOf(" "))
 					});
 					if (!_.isUndefined(seeAlsoItem) && !_.isNull(seeAlsoItem)) {
@@ -469,9 +523,9 @@ function registerListeners() {
 						if (endsWith(selectedMenuItem, "-OR)")) {
 							queryType = seeAlsoItem.queries.or;
 						}
-
+						
 						var query = isUnfielded(selectedMenuItem) ? queryType.unfielded : queryType.fielded;
-
+						
 						var postData = {
 							"query": query,
 						    "start": 0,
@@ -479,6 +533,14 @@ function registerListeners() {
 						    "matchAll": true,
 						    "newSearch": true
 						};
+						if ($("#laFilterQuery").val()) {
+							postData.filterQuery = { "AFI__DOC_TYPE_t": [ $("#laFilterQuery").val() ] };
+						}
+						if ($("#laFacet").val()) {
+							postData.facet = true;
+							postData.facetMethod = "fc";
+							postData.facetField = $("#laFacet").val();
+						}
 						ALERT.info("Retrieving " + rows + " document(s) with query, " + query);
 						search(postData);
 						disableI2Export(true);
@@ -496,38 +558,47 @@ function registerListeners() {
 	});
 }
 
-var nodes, edges, network;
+var nodes, edges, nodesDeleted, edgesDeleted, network;
 var queryList = [];
 var resolveId = 1;
 var loadAlready = false;
 
-
 $(document).ready(function() {
 	var queryStr = getUrlVars();
-
+	
 	initDraw();
 
 	var laView = new LinkAnalysisView({
-		model : new LinkAnalysisModel({
+		model : new LinkAnalysisModel({ 
 			query: queryStr.query,
-			rows: queryStr.rows,
+			rows: queryStr.rows, 
 			filterQuery: queryStr.filterQuery,
-			facetField: queryStr.facetField
+			facetField: queryStr.facetField 
 		})
 	});
-
+	
 	laView.search();
-	disableI2Export(false);
 
+	var laOptionsView = new LinkAnalysisOptionsView();
+
+	$('#optionsMenu').puitieredmenu({
+	    popup: true,
+	    trigger: $('#optionsTrigger')
+	});
+	
+	disableI2Export(false);
+	
 	if (nodes.length == 0) {
 		ALERT.warning("Data cannot be represented in the chart! Please try again.");
 	}
 
+	$("#sidebarItemLinkAnalysis").css('display', 'inline');
+	 
 });
 
 Handlebars.registerHelper('addDivider', function (index) {
 	return index == 0 ? "" : "<li class=\"divider\"></li>";
-});
+});	
 
 Handlebars.registerHelper('getProperties', function (obj) {
 	var str = '';
@@ -551,13 +622,13 @@ Handlebars.registerHelper('getProperties', function (obj) {
 		str += '<td>' + obj.values[propertyName] + '</td>';
 		str += '</tr>';
 	}
-
+	
 	return str;
-});
-
+});	
+	        		
 Handlebars.registerHelper('loadSeeAlso', function (displayValue) {
-	return "<li><a href=\"#\">" + displayValue + " (FIELDED-AND)</a></li>\n"
-			+ "<li><a href=\"#\">" + displayValue + " (FIELDED-OR)</a></li>\n"
-			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED-AND)</a></li>\n"
+	return "<li><a href=\"#\">" + displayValue + " (FIELDED-AND)</a></li>\n" 
+			+ "<li><a href=\"#\">" + displayValue + " (FIELDED-OR)</a></li>\n" 
+			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED-AND)</a></li>\n" 
 			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED-OR)</a></li>\n";
-});
+});	
