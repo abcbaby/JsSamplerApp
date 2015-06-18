@@ -41,7 +41,6 @@ var LinkAnalysisView = Backbone.View.extend({
 			}
 			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'));
 			search(postData);
-			disableI2Export(true);
 		}
 	},
 	render : function () {
@@ -75,35 +74,80 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 		'click #defaultLayoutBtn' : 'defaultLayout'
 	},
 	layoutUd: function() {
-		draw({ hierarchical: { direction: "UD", levelSeparation: 150 } });
-		reCluster()
+		customLayout = { hierarchical: { direction: "UD", levelSeparation: 150 } };
+		draw(customLayout);
+		reCluster();
 	},
 	layoutDu: function() {
-		draw({ hierarchical: { direction: "DU", levelSeparation: 150 } });
-		reCluster()
+		customLayout = { hierarchical: { direction: "DU", levelSeparation: 150 } };
+		draw(customLayout);
+		reCluster();
 	},
 	layoutLr: function() {
-		draw({ hierarchical: { direction: "LR", levelSeparation: 150 } });
-		reCluster()
+		customLayout = { hierarchical: { direction: "LR", levelSeparation: 150 } };
+		draw(customLayout);
+		reCluster();
 	},
 	layoutRl: function() {
-		draw({ hierarchical: { direction: "RL", levelSeparation: 150 } });
-		reCluster()
+		customLayout = { hierarchical: { direction: "RL", levelSeparation: 150 } };
+		draw(customLayout);
+		reCluster();
 	},
 	defaultLayout: function() {
-		draw({});
-		reCluster()
+		customLayout = {};
+		draw(customLayout);
+		reCluster();
 	},
 	clear: function() {
 		initDraw();		
 	},
 	i2Export: function() {
-		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-		window.location.href = "/search/api/linkanalysis/i2export.jnlp?" + queryParams;
+		if (i2Disabled) {
+			$('#i2DisabledId').puidialog({
+		        resizable: false,
+		        minimizable: false,
+		        maximizable: false,
+		        draggable: false,
+		        responsive: true,
+		        modal: true
+		    });
+			$('#i2DisabledId').puidialog('show');
+		} else {
+			$('#i2NoticeId').puidialog({
+		        resizable: false,
+		        minimizable: false,
+		        maximizable: false,
+		        draggable: false,
+		        responsive: true,
+		        modal: true,
+		        buttons: [{
+	                text: 'OK',
+	                icon: 'fa-check',
+	                click: function() {
+	                    $('#i2NoticeId').puidialog('hide');
+	            		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
+	            		window.location.href = "/search/api/linkanalysis/i2export.jnlp?" + queryParams;
+	                }
+	            }]
+		    });
+			$('#i2NoticeId').puidialog('show');
+		}
 	},
 	i2XmlExport: function() {
-		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-		window.location.href = "/search/api/linkanalysis/i2download?" + queryParams;
+		if (i2Disabled) {
+			$('#i2DisabledId').puidialog({
+		        resizable: false,
+		        minimizable: false,
+		        maximizable: false,
+		        draggable: false,
+		        responsive: true,
+		        modal: true
+		    });
+			$('#i2DisabledId').puidialog('show');
+		} else {
+			var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
+			window.location.href = "/search/api/linkanalysis/i2download?" + queryParams;
+		}
 	}
 });
 
@@ -169,9 +213,12 @@ function search(postData) {
 		}
 	});
 	ALERT.clearStatus();
+	i2Disabled = true;
 }
 
 function syncNetwork(jsonData) {
+	var allNodes = nodes.get();
+	var allEdges = edges.get();
 	var newNodes = [];
 	var newEdges = [];
 	// don't bring in nodes/edges that has already been removed by user
@@ -200,11 +247,17 @@ function syncNetwork(jsonData) {
 		}
 	})
 	
-	nodes.update(newNodes2);
-	edges.update(newEdges2);
+	if (!_.isEmpty(newNodes2) || !_.isEmpty(newEdges2)) {
+		if (!_.isEmpty(newNodes2)) {
+			nodes.update(newNodes2);
+		}
+		if (!_.isEmpty(newEdges2)) {
+			edges.update(newEdges2);
+		}
 	
-	unCluster();
-	reCluster();
+		draw(customLayout);
+		reCluster();
+	}
 }
 
 function clearSelection() {
@@ -217,10 +270,11 @@ function initDraw() {
 	edges = new vis.DataSet([]);
 	nodesDeleted = new vis.DataSet([]);
 	edgesDeleted = new vis.DataSet([]);
-	draw({});
+	customLayout = {};
+	draw(customLayout);
 }
 
-function draw(customLayout) {
+function draw() {
 	customLayout.randomSeed = 2;
 	var panelHeight = ($(window).height() - (($(".security-banner").height() * 2) + $(".navbar-header").height() + 50)) + "px";
 	var options = {
@@ -269,7 +323,7 @@ function draw(customLayout) {
 	};
 	network = new vis.Network(container, data, options);
 	
-	registerListeners();
+	registerNetworkListeners();
 
 	return network;
 }
@@ -305,25 +359,6 @@ function createClusterNode(selectedNodes, rId, sameType, resolveName) {
 		};
 }
 
-function unCluster() {
-	var allClusters = nodes.get({
-		filter: function (item) {
-			return item.cluster;
-		}
-	});
-	
-	var clusterIds = [];
-	_.each(allClusters, function(item) {
-		clusterIds.push(item.id);
-	});
-	
-	_.each(clusterIds, function(item) {
-		if (network.isCluster(item)) {
-			network.openCluster(item);
-		}
-	});
-}
-
 function reCluster() {
 	for (var i = 1; i <= resolveId; i++) {
 		var c = nodes.get('resolveId-' + i);
@@ -343,20 +378,11 @@ function loadCluster(cluster) {
 		network.cluster(clusterOptionsByData);
 }
 
-function disableI2Export(disableI2) {
-	$("#laI2ExportBtn").prop("disabled", disableI2);
-}
-
 function isUnfielded(txt) {
 	return txt.indexOf(" (UNFIELDED") !== -1;
 }
 
-function registerListeners() {
-	// need to disabled right mouse click otherwise, the network right-mouse click menu will not display properly
-	document.body.oncontextmenu = function() {return false;}
-	
-	var $contextMenu = $("#contextMenu");
-
+function registerNetworkListeners() {
 	network.on("oncontext", function (e) {
 		if (e.nodes.length != 0) {
 			network.selectNodes(e.nodes);
@@ -378,8 +404,8 @@ function registerListeners() {
 				canClusterExpand: canClusterExpand,
 			};
 			var compiledHtml = theTemplate(content);
-			$contextMenu.html(compiledHtml);
-			$contextMenu.css({
+			$("#contextMenu").html(compiledHtml);
+			$("#contextMenu").css({
 				display : "block",
 				left : e.pointer.DOM.x + $("#network").offset().left,
 				top : e.pointer.DOM.y + $("#network").offset().top
@@ -387,10 +413,20 @@ function registerListeners() {
 		}
 		return false;
 	});
+	
+	network.on("click", function() {
+		$("#contextMenu").hide();
+	});
+}
 
-	$contextMenu.on("click", "a", function(e) {
+function registerPageListeners() {
+	// need to disabled right mouse click otherwise, the network right-mouse click menu will not display properly
+	document.body.oncontextmenu = function() {return false;}
+
+	$("#contextMenu").on("click", "a", function(e) {
 		var selection = network.getSelection();
 		var selectedMenuItem = $(e.target).text();
+
 		queryList.push(selectedMenuItem);
 		switch (selectedMenuItem) {
 			case "View Detail":
@@ -415,17 +451,19 @@ function registerListeners() {
 			case "Resolve":
 				var theTemplateScript = $("#hb-resolve-input").html();
 				var theTemplate = Handlebars.compile(theTemplateScript);
-				var compiledHtml = theTemplate({resolveName: 'Resolve #' + resolveId});
+				var content  = {
+					totalNodesSelected: selection.nodes.length,
+					resolveName: 'Resolve #' + resolveId
+				};
+				var compiledHtml = theTemplate(content);
 				$("#resolveInputForm").html(compiledHtml);
 				
 				$('#resolveInputPanelId').puidialog({
-			        showEffect: 'fade',
-			        hideEffect: 'fade',
 			        minimizable: false,
 			        maximizable: false,
 			        draggable: false,
 			        responsive: true,
-			        modal: false,
+			        modal: true,
 			        buttons: [{
 		                text: 'OK',
 		                icon: 'fa-check',
@@ -543,24 +581,27 @@ function registerListeners() {
 						}
 						ALERT.info("Retrieving " + rows + " document(s) with query, " + query);
 						search(postData);
-						disableI2Export(true);
 					}
 				}
 		}
 		if (selectedMenuItem != "Resolve") {
 			clearSelection();
 		}
-		$contextMenu.hide();
+		$("#contextMenu").hide();
 	});
 
-	network.on("click", function() {
-		$contextMenu.hide();
+	$('#optionsMenu').puitieredmenu({
+	    popup: true,
+	    trigger: $('#optionsTrigger')
 	});
+	
 }
 
 var nodes, edges, nodesDeleted, edgesDeleted, network;
 var queryList = [];
 var resolveId = 1;
+var customLayout;
+var i2Disabled = false;
 var loadAlready = false;
 
 $(document).ready(function() {
@@ -578,22 +619,17 @@ $(document).ready(function() {
 	});
 	
 	laView.search();
+	i2Disabled = false;
 
 	var laOptionsView = new LinkAnalysisOptionsView();
 
-	$('#optionsMenu').puitieredmenu({
-	    popup: true,
-	    trigger: $('#optionsTrigger')
-	});
-	
-	disableI2Export(false);
+	registerPageListeners();
 	
 	if (nodes.length == 0) {
 		ALERT.warning("Data cannot be represented in the chart! Please try again.");
 	}
 
 	$("#sidebarItemLinkAnalysis").css('display', 'inline');
-	 
 });
 
 Handlebars.registerHelper('addDivider', function (index) {

@@ -43,9 +43,8 @@
 		<li>Select multiple node (by hold down the Ctrl key) and right-mouse click (with different image)</li>
 	</ul>
 
-
 <script id="hb-resolve-input" type="text/x-handlebars-template">
-<div id="resolveInputPanelId" title="Resolve Name">
+<div id="resolveInputPanelId" title="Enter name for {{totalNodesSelected}} resolved object(s)">
 	<div class="col-md-12">
 		<input id="resolveName" placeholder="Enter name" class="form-control input-md" size="25" type="text" value="{{resolveName}}">
 	</div>
@@ -88,7 +87,7 @@
 	<ul id="networkContextMenuId" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display: block; position: static; margin-bottom: 5px;">
 		{{#if seeAlso}}
 		<li class="dropdown-submenu">
-			<a tabindex="-1" href="#">See Also</a>
+			<a href="#">See Also</a>
 			<ul class="dropdown-menu">
 				{{#each seeAlso}}
 				{{{addDivider @index}}}
@@ -99,13 +98,13 @@
 		<li class="divider"></li>
 		{{/if}}
 		{{#if allowMerge}}
-		<li><a tabindex="-1">Merge</a></li>
+		<li><a>Merge</a></li>
 		<li class="divider"></li>
 		{{/if}}
-		{{#if this.canCluster}}<li><a tabindex="-1">Resolve</a></li>{{/if}}
-		{{#if this.canClusterExpand}}<li><a tabindex="-1">Un-Resolve</a></li>{{/if}}
-		<li><a tabindex="-1">Delete</a></li>
-		{{#if this.viewProperties}}<li><a tabindex="-1">Properties</a></li>{{/if}}
+		{{#if this.canCluster}}<li><a>Resolve</a></li>{{/if}}
+		{{#if this.canClusterExpand}}<li><a>Un-Resolve</a></li>{{/if}}
+		<li><a>Delete</a></li>
+		{{#if this.viewProperties}}<li><a>Properties</a></li>{{/if}}
 	</ul>
 </script>
 
@@ -115,69 +114,66 @@
 	{{/each}}
 </script>
 
-<script id="hb-filter-query" type="text/x-handlebars-template">
-	<option value="">Data Source</option>
-	{{#each ds}}
-	<option value="{{this.id}}">{{this.name}}</option>
-	{{/each}}
-</script>
-
-<script id="hb-facets" type="text/x-handlebars-template">
-	{{#each facets}}
-	<option value="{{this.field}}">{{this.label}}</option>
-	{{/each}}
-</script>
 
 <div id="content" class="content">
 	<div id="manualSearch" class="row">
 		<div class="col-md-12">
-			<form class="form-inline" onsubmit="return false;">
-				<div class="form-group">
-					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
-				</div>
-				<div class="form-group laFacet">
-					<select id="laFacet" class="form-control"></select>
-				</div>
-				<div class="form-group laFilterQuery">
-					<select id="laFilterQuery" class="form-control"></select>
-				</div>
-				<div class="form-group laRows">
-					<select id="laRows" class="form-control"></select>
-				</div>
-				<div class="form-group">
-					<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
-				</div>
-				<div class="form-group">
-					<button id="optionsTrigger" class="btn btn-default fa fa-cog">Options</button>
-					<ul id="optionsMenu">
-					    <li id="laClearBtn"><a data-icon="fa-file-o" href="#">Clear</a></li>
-					    <li>
-					    	<a data-icon="fa-sitemap">Layouts</a>
-					        <ul> 
-					            <li id="udBtn"><a data-icon="fa-arrow-down" href="#">Up-Down</a></li>
-						    	<li id="duBtn"><a data-icon="fa-arrow-up" href="#">Down-Up</a></li>
-						    	<li id="lrBtn"><a data-icon="fa-arrow-right" href="#">Left-Right</a></li>
-						    	<li id="rlBtn"><a data-icon="fa-arrow-left" href="#">Right-Left</a></li>
-						    	<li id="defaultLayoutBtn"><a data-icon="fa-arrows" href="#">Default</a></li>
-					        </ul>
-					    </li>
-					    <li>
-					    	<a data-icon="fa-download">i2 Export</a>
-					        <ul> 
-					            <li id="laI2ExportBtn"><a data-icon="fa-eye" href="#">i2 Viewer</a></li>
-						    	<li id="laI2XmlExportBtn"><a data-icon="fa-file-code-o" href="#">i2 iXv (XML)</a></li>
-					        </ul>
-					    </li>
-					</ul>
-				</div>
-			</form>
+			<table>
+				<tr>
+					<td>
+						<form class="form-inline" style="display:inline" onsubmit="return false;">
+							<div class="form-group">
+								<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
+							</div>
+							<div class="form-group laRows">
+								<select id="laRows" class="form-control"></select>
+							</div>
+							<div class="form-group">
+								<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
+							</div>
+						</form>
+					</td>
+					<td>&nbsp;
+						<button id="optionsTrigger" class="btn btn-default fa fa-cog"> Options</button>
+						<ul id="optionsMenu">
+						    <li id="laClearBtn"><a data-icon="fa-file-o" href="#"> Clear</a></li>
+						    <li>
+						    	<a data-icon="fa-sitemap"> Layouts</a>
+						        <ul> 
+						            <li id="udBtn"><a data-icon="fa-arrow-down" href="#"> Up-Down</a></li>
+							    	<li id="duBtn"><a data-icon="fa-arrow-up" href="#"> Down-Up</a></li>
+							    	<li id="lrBtn"><a data-icon="fa-arrow-right" href="#"> Left-Right</a></li>
+							    	<li id="rlBtn"><a data-icon="fa-arrow-left" href="#"> Right-Left</a></li>
+							    	<li id="defaultLayoutBtn"><a data-icon="fa-arrows" href="#"> Default</a></li>
+						        </ul>
+						    </li>
+						    <li>
+						    	<a data-icon="fa-download"> i2 Export</a>
+						        <ul> 
+						            <li id="laI2ExportBtn"><a data-icon="fa-eye" href="#"> i2 Viewer</a></li>
+							    	<li id="laI2XmlExportBtn"><a data-icon="fa-file-code-o" href="#"> i2 iXv (XML)</a></li>
+						        </ul>
+						    </li>
+						</ul>
+					</td>
+				</tr>
+			</table>
 		</div>
 	</div>
 	
 	<div id="network"/>
 </div>
-
+	
 <div id="contextMenu" class="dropdown clearfix"></div>
+
+<div id="i2NoticeId" title="Notice!" style="display: none">
+    <p>i2 Viewer only support 32-Bit Java JRE. If you do not have it, please use the 'i2 iXv (XML)' 
+    option instead to manually download and import you data.</p>
+</div>
+
+<div id="i2DisabledId" title="Notice!" style="display: none">
+    <p>Export to i2 is disabled after subsequent any search!</p>
+</div>
 
 <div id="resolveInputForm"></div>
 
