@@ -1,38 +1,3 @@
-var dataSourcesWithNoOntology = 
-	[
-		"AFI PROJECTS",
-		"AFI RFIS",
-		"AFI INTELVIEW",
-		"CBP IRS-FIR",
-		"CBP IRS HSIR",
-		"CBP IRS-SRR MOBILITY",
-		"CBP IRS-SRR TRADE",
-		"CCD DOCUMENT",
-		"CCD NAME BIRTH COUNTRY",
-		"CCD NAME CITIZENSHIP",
-		"CCD NAME DOB",
-		"ICE IIR",
-		"ICE INTEL PRODUCTS",
-		"ICE NAME TRACE",
-		"LEISS ARJIS",
-		"LEISS AZCENTRAL",
-		"LEISS AZEAST",
-		"LEISS AZNORTH",
-		"LEISS AZSOUTH",
-		"LEISS FBI N-DEX",
-		"LEISS LALEAS",
-		"LEISS LINXCA",
-		"LEISS LINXHR",
-		"LEISS LINNCR",
-		"LEISS LINXNW",
-		"SQ13",
-		"SQ15",
-		"SQ16",
-		"TF CASE ACTIVITY",
-		"TF CASE ATTACHMENT",
-		"TF CASE RESEARCH"
-    ];
-
 var LinkAnalysisModel = Backbone.Model.extend({
     defaults: {
         query: "",
