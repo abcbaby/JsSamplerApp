@@ -12,6 +12,7 @@
 <link href="network_files/bootstrap.min.css" rel="stylesheet" type="text/css">
 <link href="/js/primeui-2.0/themes/bootstrap/theme.css" rel="stylesheet" type="text/css" />
 <link href="/js/primeui-2.0/primeui-2.0-min.css" rel="stylesheet" type="text/css" />
+<link href="/js/bootstrap-toggle/bootstrap-toggle.min.css" rel="stylesheet" type="text/css" />
 
 <style>
 #network {
@@ -117,7 +118,7 @@
 
 <div id="content" class="content">
 	<div id="manualSearch" class="row">
-		<div class="col-md-12">
+		<div class="col-md-10">
 			<table>
 				<tr>
 					<td>
@@ -125,7 +126,7 @@
 							<div class="form-group">
 								<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
 							</div>
-							<div class="form-group laRows">
+							<div class="form-group laRows" title="# of rows">
 								<select id="laRows" class="form-control"></select>
 							</div>
 							<div class="form-group">
@@ -159,6 +160,12 @@
 				</tr>
 			</table>
 		</div>
+		<div class="col-md-2 text-right">
+			<span class="selectDraw" title="Draw by dragging right-mouse button">
+				<input id="highLightId" data-toggle="toggle" data-size="small" type="checkbox">
+			</span>
+			<input id="stretchId" title="Line size" type="text" maxlength="4" size="4"/>
+		</div>	
 	</div>
 	
 	<div id="network"/>
@@ -187,6 +194,8 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-growl/1.0.0/jquery.bootstrap-growl.min.js"></script>
+<script type="text/javascript" src="/js/lodash/lodash.js"></script>
+<script type="text/javascript" src="/js/bootstrap-toggle/bootstrap-toggle.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
 <script src="/js/primeui-2.0/primeui-2.0-min.js"></script>
 <script type="text/javascript" src="/js/utils.js"></script>

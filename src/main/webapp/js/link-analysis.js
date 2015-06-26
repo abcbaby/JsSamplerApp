@@ -1,3 +1,38 @@
+var dataSourcesWithNoOntology = 
+	[
+		"AFI PROJECTS",
+		"AFI RFIS",
+		"AFI INTELVIEW",
+		"CBP IRS-FIR",
+		"CBP IRS HSIR",
+		"CBP IRS-SRR MOBILITY",
+		"CBP IRS-SRR TRADE",
+		"CCD DOCUMENT",
+		"CCD NAME BIRTH COUNTRY",
+		"CCD NAME CITIZENSHIP",
+		"CCD NAME DOB",
+		"ICE IIR",
+		"ICE INTEL PRODUCTS",
+		"ICE NAME TRACE",
+		"LEISS ARJIS",
+		"LEISS AZCENTRAL",
+		"LEISS AZEAST",
+		"LEISS AZNORTH",
+		"LEISS AZSOUTH",
+		"LEISS FBI N-DEX",
+		"LEISS LALEAS",
+		"LEISS LINXCA",
+		"LEISS LINXHR",
+		"LEISS LINNCR",
+		"LEISS LINXNW",
+		"SQ13",
+		"SQ15",
+		"SQ16",
+		"TF CASE ACTIVITY",
+		"TF CASE ATTACHMENT",
+		"TF CASE RESEARCH"
+    ];
+
 var LinkAnalysisModel = Backbone.Model.extend({
     defaults: {
         query: "",
@@ -75,27 +110,27 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 	},
 	layoutUd: function() {
 		customLayout = { hierarchical: { direction: "UD", levelSeparation: 150 } };
-		draw(customLayout);
+		draw();
 		reCluster();
 	},
 	layoutDu: function() {
 		customLayout = { hierarchical: { direction: "DU", levelSeparation: 150 } };
-		draw(customLayout);
+		draw();
 		reCluster();
 	},
 	layoutLr: function() {
 		customLayout = { hierarchical: { direction: "LR", levelSeparation: 150 } };
-		draw(customLayout);
+		draw();
 		reCluster();
 	},
 	layoutRl: function() {
 		customLayout = { hierarchical: { direction: "RL", levelSeparation: 150 } };
-		draw(customLayout);
+		draw();
 		reCluster();
 	},
 	defaultLayout: function() {
 		customLayout = {};
-		draw(customLayout);
+		draw();
 		reCluster();
 	},
 	clear: function() {
@@ -126,7 +161,7 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 	                click: function() {
 	                    $('#i2NoticeId').puidialog('hide');
 	            		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-	            		window.location.href = "/search/api/linkanalysis/i2export.jnlp?" + queryParams;
+	            		window.location.href = "/search/api/linkanalysis/i2export.jnlp?search=" + getUrlVars().origin;
 	                }
 	            }]
 		    });
@@ -146,18 +181,10 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 			$('#i2DisabledId').puidialog('show');
 		} else {
 			var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-			window.location.href = "/search/api/linkanalysis/i2download?" + queryParams;
+			window.location.href = "/search/api/linkanalysis/i2download?search=" + getUrlVars().origin;
 		}
 	}
 });
-
-function startsWith(str, prefix) {
-    return str.substring(0, prefix.length) === prefix;
-}
-
-function endsWith(str, suffix) {
-	return str.indexOf(suffix, str.length - suffix.length) !== -1;
-}
 
 // Read a page's GET URL variables and return them as an associative array.
 function getUrlVars() {
@@ -217,8 +244,6 @@ function search(postData) {
 }
 
 function syncNetwork(jsonData) {
-	var allNodes = nodes.get();
-	var allEdges = edges.get();
 	var newNodes = [];
 	var newEdges = [];
 	// don't bring in nodes/edges that has already been removed by user
@@ -254,15 +279,7 @@ function syncNetwork(jsonData) {
 		if (!_.isEmpty(newEdges2)) {
 			edges.update(newEdges2);
 		}
-	
-		draw(customLayout);
-		reCluster();
 	}
-}
-
-function clearSelection() {
-	network.selectNodes([]);
-	network.selectEdges([]);
 }
 
 function initDraw() {
@@ -279,11 +296,10 @@ function draw() {
 	var panelHeight = ($(window).height() - (($(".security-banner").height() * 2) + $(".navbar-header").height() + 50)) + "px";
 	var options = {
 		layout: customLayout,
-		height : panelHeight,
+		height: panelHeight,
 		interaction: {
 	    	multiselect: true,
-	    	navigationButtons: true,
-	    	keyboard: true
+	    	navigationButtons: true
 	    },
 	    nodes: {
 	        scaling: {
@@ -300,28 +316,27 @@ function draw() {
             smooth: {
             	type: 'continuous'
             },
-			length : 250
+			length: edgeLength
 		},
 		physics : {
-			stabilization: false,
-			barnesHut : {
-				gravitationalConstant : -2000,
-				centralGravity : 0,
-				springLength : 100,
-				springConstant : 0.04,
-				damping : 0.09
-			}
+			stabilization: true,
+			barnesHut: {
+				gravitationalConstant: -2000,
+				centralGravity: 0,
+				springLength: 100,
+				springConstant: 0.1,
+				damping: 0.09
+			},
+			maxVelocity: 25,
+			minVelocity: 1
 		}
 	};
-
-	// create a network
-	var container = document.getElementById("network");
 
 	var data = {
 		nodes : nodes,
 		edges : edges
 	};
-	network = new vis.Network(container, data, options);
+	network = new vis.Network(container[0], data, options);
 	
 	registerNetworkListeners();
 
@@ -359,9 +374,18 @@ function createClusterNode(selectedNodes, rId, sameType, resolveName) {
 		};
 }
 
+function unCluster() {
+	for (var i = (resolveId - 1); i >= 1; i--) {
+		var rId = createResolveId(i);
+		if (network.isCluster(rId)) {
+			network.openCluster(rId);
+		}
+	}
+}
+
 function reCluster() {
 	for (var i = 1; i <= resolveId; i++) {
-		var c = nodes.get('resolveId-' + i);
+		var c = nodes.get(createResolveId(i));
 		if (c != null) {
 			loadCluster(c);
 		}
@@ -370,28 +394,85 @@ function reCluster() {
 
 function loadCluster(cluster) {
 	var clusterOptionsByData = {
-			joinCondition:function(childOptions) {
-				return childOptions[cluster.id] == cluster.id;
-			},
-			clusterNodeProperties: cluster
-		}
-		network.cluster(clusterOptionsByData);
+		joinCondition:function(childOptions) {
+			return childOptions[resolveNameId] == cluster.id;
+		},
+		clusterNodeProperties: cluster
+	}
+	network.cluster(clusterOptionsByData);
 }
 
 function isUnfielded(txt) {
 	return txt.indexOf(" (UNFIELDED") !== -1;
 }
 
+function createResolveId(resolveId) {
+	return 'resolveId-' + resolveId;	
+}
+
+function selectNodesFromHighlight() {
+	var fromX, toX, fromY, toY;
+	var nodesIdInDrawing = [];
+	var xRange = getStartToEnd(rect.startX, rect.w);
+	var yRange = getStartToEnd(rect.startY, rect.h);
+	if (!_.isUndefined(rect.startX) && !_.isUndefined(rect.startY)
+		&& !_.isUndefined(rect.w) && !_.isUndefined(rect.h)) {
+		var allNodes = nodes.get({returnType:"Object"});
+		_.each(allNodes, function(curNode) {
+			var nodePosition = network.getPositions([curNode.id]);
+			var nodeXY = network.canvasToDOM({x: nodePosition[curNode.id].x, y: nodePosition[curNode.id].y})
+			if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end
+					&& yRange.start <= nodeXY.y && nodeXY.y <= yRange.end) {
+				nodesIdInDrawing.push(curNode.id);
+			}
+		});
+	}
+	network.selectNodes(nodesIdInDrawing);
+}
+
+function getStartToEnd(start, theLen) {
+	return theLen > 0
+		? {start: start, end: start + theLen}
+		: {start: start + theLen, end: start};
+}
+
+function removeSelectedNodes() {
+	var selection = network.getSelection();
+	// somehow some selection may have null values, so remove it
+	var selectedNodes = _.filter(nodes.get(selection.nodes), function(item) {
+		return item != null;
+	});
+	var selectedEdges = _.filter(edges.get(selection.edges), function(item) {
+		return item != null;
+	});
+	nodesDeleted.update(selectedNodes);
+	edgesDeleted.update(selectedEdges);
+	nodes.remove(selection.nodes);
+	edges.remove(selection.edges);
+	if (!_.isEmpty(nodes.get()) && !_.isUndefined(network.popup) && !_.isUndefined(nodes.get()[0])) {
+		network.popup.popupTargetId = nodes.get()[0].id;
+	}
+	
+}
+
+function saveDrawingSurface() {
+   drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function restoreDrawingSurface() {
+	ctx.putImageData(drawingSurfaceImageData, 0, 0);
+}
+
 function registerNetworkListeners() {
 	network.on("oncontext", function (e) {
-		if (e.nodes.length != 0) {
+		if (!highlighting && e.nodes.length != 0) {
 			network.selectNodes(e.nodes);
 			var selection = network.getSelection();
 			var theTemplateScript = $("#hb-context-menu").html();
 			var theTemplate = Handlebars.compile(theTemplateScript);
 			var seeAlsoList;
 			var selectedNodes = nodes.get(e.nodes);
-			if (selectedNodes[0] != null) {
+			if (selectedNodes.length == 1 && selectedNodes[0] != null) {
 				seeAlsoList = selectedNodes[0].seeAlso;
 			}
 			var canClusterExpand = _.some(e.nodes, function(e) {
@@ -407,8 +488,8 @@ function registerNetworkListeners() {
 			$("#contextMenu").html(compiledHtml);
 			$("#contextMenu").css({
 				display : "block",
-				left : e.pointer.DOM.x + $("#network").offset().left,
-				top : e.pointer.DOM.y + $("#network").offset().top
+				left : e.pointer.DOM.x + container.offset().left,
+				top : e.pointer.DOM.y + container.offset().top
 			});
 		}
 		return false;
@@ -433,20 +514,7 @@ function registerPageListeners() {
 				ALERT.info("Detail not implemented yet!");
 				break;
 			case "Delete":
-				// somehow some selection may have null values, so remove it
-				var selectedNodes = _.filter(nodes.get(selection.nodes), function(item) {
-					return item != null;
-				});
-				var selectedEdges = _.filter(edges.get(selection.edges), function(item) {
-					return item != null;
-				});
-				nodesDeleted.update(selectedNodes);
-				edgesDeleted.update(selectedEdges);
-				nodes.remove(selection.nodes);
-				edges.remove(selection.edges);
-				if (!_.isEmpty(nodes.get()) && !_.isUndefined(network.popup) && !_.isUndefined(nodes.get()[0])) {
-					network.popup.popupTargetId = nodes.get()[0].id;
-				}
+				removeSelectedNodes();
 				break;
 			case "Resolve":
 				var theTemplateScript = $("#hb-resolve-input").html();
@@ -470,7 +538,7 @@ function registerPageListeners() {
 		                click: function() {
 		            		var selection = network.getSelection();
 		    				var resolveName = $("#resolveName").val().trim();
-		    				var rId = 'resolveId-' + resolveId;
+		    				var rId = createResolveId(resolveId);
 		    				var selectedNodes = _.without(nodes.get(selection.nodes), null);
 	    					var sameType = !_.some(selection.nodes, function(e) {
 	    						return network.isCluster(e);
@@ -483,7 +551,7 @@ function registerPageListeners() {
 	    					}
 		    					
 		    				_.each(selectedNodes, function(item) {
-		    					item[rId] = rId;
+		    					item[resolveNameId] = rId;
 		    				});
 
 		    				nodes.update(selectedNodes);
@@ -492,7 +560,7 @@ function registerPageListeners() {
 
 		    				loadCluster(cluster);
 		    				resolveId++;
-		    				clearSelection();
+		    				network.unselectAll();
 		    				
 		                    $('#resolveInputPanelId').puidialog('hide');
 		                }
@@ -504,6 +572,14 @@ function registerPageListeners() {
 			case "Un-Resolve":
 				_.each(selection.nodes, function(item) {
 					if (network.isCluster(item)) {
+						var nodesInCluster = network.getNodesInCluster(item);
+						_.each(nodesInCluster, function(it) {
+							var node = nodes.get(it);
+							node[resolveNameId] = '';
+							nodes.update(node);
+							node = nodes.get(it);
+							console.log(node);
+						})
 						network.openCluster(item);
 						nodes.remove(item);
 					}
@@ -558,7 +634,7 @@ function registerPageListeners() {
 					if (!_.isUndefined(seeAlsoItem) && !_.isNull(seeAlsoItem)) {
 						var rows = $('#laRows').val();
 						var queryType = seeAlsoItem.queries.and; // default to and
-						if (endsWith(selectedMenuItem, "-OR)")) {
+						if (_.endsWith(selectedMenuItem, "-OR)")) {
 							queryType = seeAlsoItem.queries.or;
 						}
 						
@@ -585,23 +661,111 @@ function registerPageListeners() {
 				}
 		}
 		if (selectedMenuItem != "Resolve") {
-			clearSelection();
+			network.unselectAll();
 		}
 		$("#contextMenu").hide();
 	});
+	
+	container.on("mousemove", function(e) {
+		if (highlighting && drag) { 
+			restoreDrawingSurface();
+			rect.w = (e.pageX - this.offsetLeft) - rect.startX;
+			rect.h = (e.pageY - this.offsetTop) - rect.startY ;
+			
+			ctx.setLineDash([5]);
+			ctx.strokeStyle = "rgb(0, 102, 0)";
+			ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
+			ctx.setLineDash([]);
+			ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
+			ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
+		}
+	});
+    
+    container.on("mousedown", function(e) {
+		if (highlighting && e.button == 2) { 
+			saveDrawingSurface();
+			var that = this;
+			rect.startX = e.pageX - this.offsetLeft;
+			rect.startY = e.pageY - this.offsetTop;
+			drag = true;
+			container[0].style.cursor = "crosshair";
+		}
+	}); 
+	
+	container.on("mouseup", function(e) {
+		if (highlighting && e.button == 2) { 
+			restoreDrawingSurface();
+			drag = false;
+
+			rect.w = (e.pageX - this.offsetLeft) - rect.startX;
+			rect.h = (e.pageY - this.offsetTop) - rect.startY ;
+			
+			ctx.strokeStyle = "rgb(160, 160, 160)";
+			ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
+			ctx.fillStyle = "rgba(128, 128, 128, 0.2)";
+			ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
+
+			container[0].style.cursor = "default";
+			selectNodesFromHighlight();
+		}
+	});
+
+	$(document).keyup(function(e){
+	    if (e.keyCode == 46) { // delete button pressed
+	    	removeSelectedNodes();
+	    }
+	}) 
+	
+	$('.laFacet').tooltip();
+	$('.laFilterQuery').tooltip();
+	$('.laRows').tooltip();
+	$('.selectDraw').tooltip();
+	$('#stretchId').tooltip();
 
 	$('#optionsMenu').puitieredmenu({
 	    popup: true,
 	    trigger: $('#optionsTrigger')
 	});
 	
+	$('#highLightId').change(function() {
+		highlighting = $(this).prop('checked');
+		network.setOptions({
+			interaction: { 
+				dragView: !highlighting 
+			}
+		});
+	});
+	
+	$("#stretchId").val(edgeLength);
+	$('#stretchId').puispinner({
+		min: minEdgeLength,
+        max: maxEdgeLength,
+		step: 50
+	});
+	$('#stretchId').change(function() {
+		edgeLength = parseInt($('#stretchId').val());
+		if (edgeLength >= minEdgeLength && edgeLength <= maxEdgeLength) {
+			network.setOptions({edges: {length: edgeLength}});
+		} else {
+			ALERT.warning("Value must be between " + minEdgeLength + " and " + maxEdgeLength + ".");
+		}
+	});
 }
 
 var nodes, edges, nodesDeleted, edgesDeleted, network;
 var queryList = [];
 var resolveId = 1;
+var resolveNameId = 'resolveId';
 var customLayout;
+var minEdgeLength = 200;
+var maxEdgeLength = 1000;
+var edgeLength = 250;
 var i2Disabled = false;
+var container = $("#network");
+var canvas, ctx, drawingSurfaceImageData, selectedNodes;
+var rect = {};
+var drag = false;
+var highlighting = false;
 var loadAlready = false;
 
 $(document).ready(function() {
@@ -609,6 +773,9 @@ $(document).ready(function() {
 	
 	initDraw();
 
+	canvas = network.canvas.frame.canvas;
+	ctx = canvas.getContext('2d');
+	
 	var laView = new LinkAnalysisView({
 		model : new LinkAnalysisModel({ 
 			query: queryStr.query,
@@ -624,7 +791,8 @@ $(document).ready(function() {
 	var laOptionsView = new LinkAnalysisOptionsView();
 
 	registerPageListeners();
-	
+	$('#highLightId').bootstrapToggle(highlighting ? 'on' : 'off');
+
 	if (nodes.length == 0) {
 		ALERT.warning("Data cannot be represented in the chart! Please try again.");
 	}
@@ -642,7 +810,11 @@ Handlebars.registerHelper('getProperties', function (obj) {
 	str += '<td>Document ID</td>';
 	str += '<td>' + obj['sourceAfiDocId'] + '</td>';
 	str += '</tr>';
-	if (startsWith(obj['image'], "data:")) {
+	str += '<tr>';
+	str += '<td>Node ID</td>';
+	str += '<td>' + obj['id'] + '</td>';
+	str += '</tr>';
+	if (_.startsWith(obj['image'], "data:")) {
 		str += '<tr>';
 		str += '<td>Image</td>';
 		str += '<td><img src="' + obj['image'] + '" height="200px" width="200px"></td>';
@@ -652,7 +824,8 @@ Handlebars.registerHelper('getProperties', function (obj) {
 		if (propertyName == "imageContent") {
 			continue;
 		}
-		var name = propertyName.split(/(?=[A-Z])/).join(" ");
+		//var name = propertyName.split(/(?=[A-Z])/).join(" ");
+		var name = _.startCase(propertyName);
 		str += '<tr>';
 		str += '<td class="capitalize">' + name + '</td>';
 		str += '<td>' + obj.values[propertyName] + '</td>';
