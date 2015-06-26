@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+  <title>Network | Basic usage</title>
+	 
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/vis/vis.js"></script>
+	<link href="/js/vis/vis.css" rel="stylesheet" type="text/css">
+
+  <style type="text/css">
+    #network {
+      width: 600px;
+      height: 400px;
+      border: 1px solid lightgray;
+    }
+
+    p {
+      max-width:600px;
+    }
+  </style>
+</head>
+<body>
+
+<p>
+  You can draw on the canvas using normal HTML5 canvas functions. The before drawing will be behind the network, the after drawing will be in front of the network.
+</p>
+
+<div id="network"></div>
+
+<script type="text/javascript">
+  // create an array with nodes
+  var nodes = new vis.DataSet([
+    {id: 1, label: 'Node 1'},
+    {id: 2, label: 'Node 2'},
+    {id: 3, label: 'Node 3'},
+    {id: 4, label: 'Node 4'},
+    {id: 5, label: 'Node 5'}
+  ]);
+
+  // create an array with edges
+  var edges = new vis.DataSet([
+    {from: 1, to: 3},
+    {from: 1, to: 2},
+    {from: 2, to: 4},
+    {from: 2, to: 5}
+  ]);
+
+// create a network
+var container = $("#network");
+var data = {
+	nodes: nodes,
+	edges: edges
+};
+var options = {
+	layout: {randomSeed: 2},
+	interaction:{
+		dragView: false,
+		multiselect: true
+	}
+};
+var network;
+
+var canvas;
+var ctx;
+var rect = {}, drag = false;
+var drawingSurfaceImageData;
+
+function saveDrawingSurface() {
+   drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function restoreDrawingSurface() {
+	ctx.putImageData(drawingSurfaceImageData, 0, 0);
+}
+
+function selectNodesFromHighlight() {
+	var fromX, toX, fromY, toY;
+	var nodesIdInDrawing = [];
+	var xRange = getStartToEnd(rect.startX, rect.w);
+	var yRange = getStartToEnd(rect.startY, rect.h);
+	if (typeof rect.startX !== "undefined" && typeof rect.startY !== "undefined"
+			&& typeof rect.w !== "undefined" && typeof rect.h !== "undefined") {
+		var allNodes = nodes.get({returnType:"Object"});
+		for (var i = 0; i < allNodes.length; i++) {
+			var curNode = allNodes[i];
+			var nodePosition = network.getPositions([curNode.id]);
+			var nodeXY = network.canvasToDOM({x: nodePosition[curNode.id].x, y: nodePosition[curNode.id].y})
+			if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end
+					&& yRange.start <= nodeXY.y && nodeXY.y <= yRange.end) {
+				nodesIdInDrawing.push(curNode.id);
+			}
+		}
+	}
+	network.selectNodes(nodesIdInDrawing);
+}
+
+function getStartToEnd(start, theLen) {
+	return theLen > 0
+		? {start: start, end: start + theLen}
+		: {start: start + theLen, end: start};
+}
+
+$(document).ready(function() {
+	container.on("mousemove", function(e) {
+		if (drag) { 
+			restoreDrawingSurface();
+			rect.w = (e.pageX - this.offsetLeft) - rect.startX;
+			rect.h = (e.pageY - this.offsetTop) - rect.startY ;
+			
+			ctx.setLineDash([5]);
+			ctx.strokeStyle = "rgb(0, 102, 0)";
+			ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
+			ctx.setLineDash([]);
+			ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
+			ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
+		}
+	});
+    
+    container.on("mousedown", function(e) {
+		if (e.button == 2) { 
+			saveDrawingSurface();
+			var that = this;
+			rect.startX = e.pageX - this.offsetLeft;
+			rect.startY = e.pageY - this.offsetTop;
+			drag = true;
+			container[0].style.cursor = "crosshair";
+		}
+	}); 
+	
+	container.on("mouseup", function(e) {
+		if (e.button == 2) { 
+			restoreDrawingSurface();
+			drag = false;
+
+			container[0].style.cursor = "default";
+			selectNodesFromHighlight();
+		}
+	});
+
+	document.body.oncontextmenu = function() {return false;}
+	network = new vis.Network(container[0], data, options);
+	canvas = network.canvas.frame.canvas;
+	ctx = canvas.getContext('2d');
+
+});
+</script>
+
+</body>
+</html>
