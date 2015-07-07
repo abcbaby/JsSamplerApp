@@ -1,10 +1,36 @@
 var LinkAnalysisModel = Backbone.Model.extend({
     defaults: {
         query: "",
+        start: "0",
         rows: "10",
         filterQuery: "",
     	facetField: ""
     },    
+});
+
+var LinkAnalysisDataSourceColorView = Backbone.View.extend({
+	el : $("#colorLegendPanelId"),
+	events : {
+		'click .byDS' : 'highLightByDS'
+	},
+	highLightByDS: function(event) {
+		var dsId = $(event.currentTarget).data('ds-id');
+		var nodesWithDS = nodes.get({
+		    filter: function (item) {
+		    	if (network.isCluster(item.id)) {
+		    		return false;
+		    	} else {
+					var ds = getDataSourceName(item['sourceAfiDocId']);
+			    	return ds == dsId;
+		    	}
+		    }
+		});
+		var nodeIds = [];
+		_.each(nodesWithDS, function(item) {
+			nodeIds.push(item.id);
+		})
+		network.selectNodes(nodeIds);
+	}
 });
 
 var LinkAnalysisView = Backbone.View.extend({
@@ -18,14 +44,14 @@ var LinkAnalysisView = Backbone.View.extend({
 	search: function() {
 		var qry = this.$el.find('#laSearchTxt').val().trim();
 		if (qry == '') {
-			ALERT.info("Please enter a search");
+			ALERT.info("Please enter a search", 250);
 		} else {
 			this.model.set('query', qry); 
 			this.model.set('rows', this.$el.find('#laRows').val()); 
 			var postData = {
 					"query": this.model.get('query'),
+					"start": this.model.get('start'),
 					"rows": this.model.get('rows'),
-					"start": 0,
 					"matchAll": true,
 					"newSearch": true
 			};
@@ -39,7 +65,7 @@ var LinkAnalysisView = Backbone.View.extend({
 				postData.facetMethod = "fc";
 				postData.facetField = $("#laFacet").val();
 			}
-			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'));
+			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'), 250);
 			search(postData);
 		}
 	},
@@ -65,6 +91,7 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 	el : $("#optionsMenu"),
 	events : {
 		'click #laClearBtn' : 'clear',
+		'click #laColorBtn' : 'colorLegend',
 		'click #laI2ExportBtn' : 'i2Export',
 		'click #laI2XmlExportBtn' : 'i2XmlExport',
 		'click #udBtn' : 'layoutUd',
@@ -75,31 +102,49 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 	},
 	layoutUd: function() {
 		customLayout = { hierarchical: { direction: "UD", levelSeparation: 150 } };
-		draw();
-		reCluster();
+		refresh();
+		hideOptions();
 	},
 	layoutDu: function() {
 		customLayout = { hierarchical: { direction: "DU", levelSeparation: 150 } };
-		draw();
-		reCluster();
+		refresh();
+		hideOptions();
 	},
 	layoutLr: function() {
 		customLayout = { hierarchical: { direction: "LR", levelSeparation: 150 } };
-		draw();
-		reCluster();
+		refresh();
+		hideOptions();
 	},
 	layoutRl: function() {
 		customLayout = { hierarchical: { direction: "RL", levelSeparation: 150 } };
-		draw();
-		reCluster();
+		refresh();
+		hideOptions();
 	},
 	defaultLayout: function() {
 		customLayout = {};
-		draw();
-		reCluster();
+		refresh();
+		hideOptions();
+	},
+	colorLegend: function() {
+		updateColorLegend();
+		
+		$('#colorLegendId').puidialog({
+			width: 300,
+			height: 200,
+	        resizable: true,
+	        minimizable: false,
+	        maximizable: false,
+	        draggable: true,
+	        responsive: true,
+	        modal: false
+	    });
+		$('#colorLegendId').puidialog('show');
+		hideOptions();
 	},
 	clear: function() {
 		initDraw();		
+		updateColorLegend();
+		hideOptions();
 	},
 	i2Export: function() {
 		if (i2Disabled) {
@@ -132,6 +177,7 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 		    });
 			$('#i2NoticeId').puidialog('show');
 		}
+		hideOptions();
 	},
 	i2XmlExport: function() {
 		if (i2Disabled) {
@@ -148,8 +194,13 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 			var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
 			window.location.href = "/search/api/linkanalysis/i2download?search=" + getUrlVars().origin;
 		}
+		hideOptions();
 	}
 });
+
+function hideOptions() {
+	$('#optionsMenu').puitieredmenu('hide');
+}
 
 // Read a page's GET URL variables and return them as an associative array.
 function getUrlVars() {
@@ -197,8 +248,7 @@ function search(postData) {
 		error: function() {
 			var jsonData = loadAlready ? loadJson("/network/addedData.json") : loadJson("/network/data.json");
 			loadAlready = true;
-			nodes.update(jsonData.nodes);
-			edges.update(jsonData.edges);
+			syncNetwork(jsonData);
 		},
 		success : function(jsonData) {
 			syncNetwork(jsonData);
@@ -212,7 +262,7 @@ function syncNetwork(jsonData) {
 	var newNodes = [];
 	var newEdges = [];
 	// don't bring in nodes/edges that has already been removed by user
-	_.each(jsonData.nodes, function(it) {
+	_.each(_(jsonData.nodes).reverse().value(), function(it) {
 		if (nodesDeleted.get(it.id) == null) {
 			newNodes.push(it);
 		}
@@ -239,12 +289,83 @@ function syncNetwork(jsonData) {
 	
 	if (!_.isEmpty(newNodes2) || !_.isEmpty(newEdges2)) {
 		if (!_.isEmpty(newNodes2)) {
-			nodes.update(newNodes2);
+			var newNodesGrp = _.forEach(newNodes2, function(item) {
+				var ds = getDataSourceName(item['sourceAfiDocId']);
+				var dsColor = _.find(dsColors, function(it) { 
+					return it.group === ds; 
+				})
+				if (_.isUndefined(dsColor)) {
+					var colorObj = getGroupColor(ds);
+					dsColor = {
+						group: ds,
+						colorObj: colorObj,
+						color: colorObj.hex
+					}
+					dsColors.push(dsColor);
+				}
+				
+				$.extend(true, item, dsColor);
+			})
+			nodes.update(newNodesGrp);
+			//nodes.update(newNodes2);
 		}
 		if (!_.isEmpty(newEdges2)) {
 			edges.update(newEdges2);
 		}
+
+		updateColorLegend();
+		
+		reCluster();
 	}
+}
+
+function getDataSourceName(sourceAfiDocId) {
+	var ds = "unknown";
+	if (!_.isNull(sourceAfiDocId) && !_.isUndefined(sourceAfiDocId)) {
+		var srcId = (_.isArray(sourceAfiDocId) ? sourceAfiDocId[0] : sourceAfiDocId).split('|');
+		ds = srcId[1];
+	}
+	return ds;
+}
+
+function getGroupColor(grpName) {
+	var color = _.find(dsColors, function(item) { 
+		return item.group === grpName; 
+	});
+	
+	if (_.isUndefined(color)) {
+		var color = colors[Math.floor(Math.random() * colors.length) + 0];
+		if (dsColors.length > 1) {
+			while (true) {
+				if (_.isUndefined(_.find(dsColors, function(item) { 
+						return item.color.hex === color.hex; 
+					}))) {
+					break;
+				} else {
+					color = colors[Math.floor(Math.random() * colors.length) + 0];
+				}
+			}
+		}
+	}
+	
+	return color;
+}
+
+function updateColorLegend() {
+	theTemplateScript = $("#hb-color-legend").html();
+	theTemplate = Handlebars.compile(theTemplateScript);
+	content  = { dsColors: dsColors };
+	compiledHtml = theTemplate(content);
+	$("#colorLegendPanelId").html(compiledHtml);
+}
+
+function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
 }
 
 function initDraw() {
@@ -252,8 +373,22 @@ function initDraw() {
 	edges = new vis.DataSet([]);
 	nodesDeleted = new vis.DataSet([]);
 	edgesDeleted = new vis.DataSet([]);
+	dsColors = [];
 	customLayout = {};
-	draw(customLayout);
+	refresh();
+}
+
+function refresh() {
+	draw();
+	// put all cluster nodes back
+	var allNodes = nodes.get();
+	for (var i = 1; i <= resolveId; i++) {
+		var rId = createResolveId(i);
+		var c = nodes.get(rId);
+		if (c != null) {
+			loadCluster(c);
+		}
+	}
 }
 
 function draw() {
@@ -308,7 +443,7 @@ function draw() {
 	return network;
 }
 
-function createClusterNode(selectedNodes, rId, sameType, resolveName) {
+function createClusterNode(selectedNodes, rId, resolveName) {
 	var largestNode = _.max(selectedNodes, function(e) {
 		return _.isUndefined(e.size)
 			? e.font.size
@@ -317,9 +452,14 @@ function createClusterNode(selectedNodes, rId, sameType, resolveName) {
 	var imgSize = parseInt(_.isUndefined(largestNode.size) 
 		? largestNode.font.size 
 		: largestNode.size) + 4;
+	var sameType = _.every(selectedNodes, function(e) {
+		// don't compare by type, since person can be suspect or officer, which have diff. image
+		return selectedNodes[0].image == e.image;
+	});
 	return sameType
 		? {
 			id: rId, 
+			resolveName: resolveName,
 			label: resolveName + ' [' + selectedNodes.length + ']', 
 			title: resolveName + ' [' + selectedNodes.length + ']', 
 			type: selectedNodes[0].type, 
@@ -330,6 +470,7 @@ function createClusterNode(selectedNodes, rId, sameType, resolveName) {
 		}
 		: {
 			id: rId, 
+			resolveName: resolveName,
 			label: resolveName + ' [' + selectedNodes.length + ']', 
 			title: resolveName + ' [' + selectedNodes.length + ']', 
 			type: 'Mixed',
@@ -339,20 +480,27 @@ function createClusterNode(selectedNodes, rId, sameType, resolveName) {
 		};
 }
 
-function unCluster() {
-	for (var i = (resolveId - 1); i >= 1; i--) {
-		var rId = createResolveId(i);
-		if (network.isCluster(rId)) {
-			network.openCluster(rId);
-		}
-	}
-}
-
 function reCluster() {
-	for (var i = 1; i <= resolveId; i++) {
-		var c = nodes.get(createResolveId(i));
-		if (c != null) {
-			loadCluster(c);
+	for (var i = 1; i < resolveId; i++) {
+		var rId = createResolveId(i);
+		var c = nodes.get({
+		    filter: function (item) {
+		    	return item.id === rId;
+		    }
+		});
+		if (c.length == 1) {
+			var clusterNode = c[0];
+			var nodesInClusterIds = network.getNodesInCluster(clusterNode.id);
+			network.openCluster(clusterNode.id);
+			nodes.remove(clusterNode.id);
+			
+			var selectedNodes = nodes.get(nodesInClusterIds);
+
+			nodes.update(selectedNodes);
+			var cluster = createClusterNode(selectedNodes, rId, clusterNode.resolveName);
+			nodes.update(cluster);
+
+			loadCluster(cluster);			
 		}
 	}
 }
@@ -372,7 +520,19 @@ function isUnfielded(txt) {
 }
 
 function createResolveId(resolveId) {
-	return 'resolveId-' + resolveId;	
+	return 'resolveId-' + resolveId + "-";	
+}
+
+function highlightNodes() {
+	selectNodesFromHighlight();
+	var curSelectedNodes = network.getSelectedNodes();
+	var allSelectedNodes = _.union(selectedNodes, curSelectedNodes);
+	var nodeIdsNotClusterd = _.filter(allSelectedNodes, function(nodeId) {
+		var node = nodes.get(nodeId);
+		return (_.isUndefined(node[resolveNameId]) || node[resolveNameId] == '') ? true : false;
+	});
+	network.selectNodes(nodeIdsNotClusterd);
+	ALERT.info(nodeIdsNotClusterd.length + " item(s) selected.", 250);
 }
 
 function selectNodesFromHighlight() {
@@ -421,11 +581,26 @@ function removeSelectedNodes() {
 }
 
 function saveDrawingSurface() {
-   drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	var saved = false;
+	var canvas = network.canvas.frame.canvas;
+	var ctx = canvas.getContext('2d');
+	try {
+	    drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	    saved = true;
+	} catch(err) {
+	}
+	
+	return saved;
 }
 
-function restoreDrawingSurface() {
-	ctx.putImageData(drawingSurfaceImageData, 0, 0);
+function restoreDrawingSurface(ctx) {
+	var restored = false;
+	try {
+		ctx.putImageData(drawingSurfaceImageData, 0, 0);
+		restored = true;
+	} catch(err) {
+	}
+	return restored;
 }
 
 function registerNetworkListeners() {
@@ -476,9 +651,9 @@ function registerPageListeners() {
 		queryList.push(selectedMenuItem);
 		switch (selectedMenuItem) {
 			case "View Detail":
-				ALERT.info("Detail not implemented yet!");
+				ALERT.info("Detail not implemented yet!", 250);
 				break;
-			case "Delete":
+			case "Remove From Graph":
 				removeSelectedNodes();
 				break;
 			case "Resolve":
@@ -505,22 +680,17 @@ function registerPageListeners() {
 		    				var resolveName = $("#resolveName").val().trim();
 		    				var rId = createResolveId(resolveId);
 		    				var selectedNodes = _.without(nodes.get(selection.nodes), null);
-	    					var sameType = !_.some(selection.nodes, function(e) {
-	    						return network.isCluster(e);
+		    				var sameType = _.every(selectedNodes, function(e) {
+		    					// don't compare by type, since person can be suspect or officer, which have diff. image
+		    					return selectedNodes[0].image == e.image;
 		    				});
-		    				if (sameType) {
-			    				sameType = _.every(selectedNodes, function(e) {
-			    					// don't compare by type, since person can be suspect or officer, which have diff. image
-			    					return selectedNodes[0].image == e.image;
-			    				});
-	    					}
 		    					
 		    				_.each(selectedNodes, function(item) {
 		    					item[resolveNameId] = rId;
 		    				});
 
 		    				nodes.update(selectedNodes);
-		    				var cluster = createClusterNode(selectedNodes, rId, sameType, resolveName);
+		    				var cluster = createClusterNode(selectedNodes, rId, resolveName);
 		    				nodes.update(cluster);
 
 		    				loadCluster(cluster);
@@ -543,7 +713,6 @@ function registerPageListeners() {
 							node[resolveNameId] = '';
 							nodes.update(node);
 							node = nodes.get(it);
-							console.log(node);
 						})
 						network.openCluster(item);
 						nodes.remove(item);
@@ -620,7 +789,7 @@ function registerPageListeners() {
 							postData.facetMethod = "fc";
 							postData.facetField = $("#laFacet").val();
 						}
-						ALERT.info("Retrieving " + rows + " document(s) with query, " + query);
+						ALERT.info("Retrieving " + rows + " document(s) with query, " + query, 250);
 						search(postData);
 					}
 				}
@@ -630,48 +799,52 @@ function registerPageListeners() {
 		}
 		$("#contextMenu").hide();
 	});
-	
-	container.on("mousemove", function(e) {
-		if (highlighting && drag) { 
-			restoreDrawingSurface();
-			rect.w = (e.pageX - this.offsetLeft) - rect.startX;
-			rect.h = (e.pageY - this.offsetTop) - rect.startY ;
-			
-			ctx.setLineDash([5]);
-			ctx.strokeStyle = "rgb(0, 102, 0)";
-			ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
-			ctx.setLineDash([]);
-			ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
-			ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
-		}
-	});
     
     container.on("mousedown", function(e) {
 		if (highlighting && e.button == 2) { 
-			saveDrawingSurface();
-			var that = this;
+			// handles multiple selection w/ Ctrl key
+			selectedNodes = e.ctrlKey ? network.getSelectedNodes() : null;
+
 			rect.startX = e.pageX - this.offsetLeft;
 			rect.startY = e.pageY - this.offsetTop;
 			drag = true;
 			container[0].style.cursor = "crosshair";
+			saveDrawingSurface();
 		}
 	}); 
 	
-	container.on("mouseup", function(e) {
-		if (highlighting && e.button == 2) { 
-			restoreDrawingSurface();
-			drag = false;
-
+	container.on("mousemove", function(e) {
+		if (highlighting && drag) { 
+			var canvas = network.canvas.frame.canvas;
+			var ctx = canvas.getContext('2d');
 			rect.w = (e.pageX - this.offsetLeft) - rect.startX;
 			rect.h = (e.pageY - this.offsetTop) - rect.startY ;
 			
-			ctx.strokeStyle = "rgb(160, 160, 160)";
-			ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
-			ctx.fillStyle = "rgba(128, 128, 128, 0.2)";
-			ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
-
+			if (restoreDrawingSurface(ctx)) {
+				drawHighlightRectangle(ctx);
+			}
+		}
+	});
+	
+	container.on("mouseup", function(e) {
+		if (highlighting && e.button == 2) { 
+			drag = false;
 			container[0].style.cursor = "default";
-			selectNodesFromHighlight();
+			var canvas = network.canvas.frame.canvas;
+			var ctx = canvas.getContext('2d');
+			rect.w = (e.pageX - this.offsetLeft) - rect.startX;
+			rect.h = (e.pageY - this.offsetTop) - rect.startY ;
+			
+			if (restoreDrawingSurface(ctx)) {
+				highlightNodes();
+			} else {
+				drawHighlightRectangle(ctx);
+				
+				setTimeout(function() {
+					highlightNodes();
+				}, 350);
+			}
+			drawingSurfaceImageData = null;
 		}
 	});
 
@@ -712,11 +885,22 @@ function registerPageListeners() {
 		if (edgeLength >= minEdgeLength && edgeLength <= maxEdgeLength) {
 			network.setOptions({edges: {length: edgeLength}});
 		} else {
-			ALERT.warning("Value must be between " + minEdgeLength + " and " + maxEdgeLength + ".");
+			ALERT.warning("Value must be between " + minEdgeLength + " and " + maxEdgeLength + ".", 250);
 		}
 	});
 }
 
+function drawHighlightRectangle(ctx) {
+	ctx.setLineDash([5]);
+	ctx.strokeStyle = "rgb(0, 102, 0)";
+	ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
+	ctx.setLineDash([]);
+	ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
+	ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
+}
+
+var cssColors = loadJson("/js/css-color-names.json");
+var colors = []; // = loadJson("/static/js/search/crayola.json");
 var nodes, edges, nodesDeleted, edgesDeleted, network;
 var queryList = [];
 var resolveId = 1;
@@ -727,23 +911,29 @@ var maxEdgeLength = 1000;
 var edgeLength = 250;
 var i2Disabled = false;
 var container = $("#network");
-var canvas, ctx, drawingSurfaceImageData, selectedNodes;
+var drawingSurfaceImageData, selectedNodes;
 var rect = {};
 var drag = false;
 var highlighting = false;
+var dsColors;
+var laView, laOptionsView, laDsColorView;
 var loadAlready = false;
 
 $(document).ready(function() {
 	var queryStr = getUrlVars();
 	
+	_.mapKeys(cssColors, function(value, key) {
+		colors.push({name: key, hex: value});
+	});
+
 	initDraw();
 
-	canvas = network.canvas.frame.canvas;
-	ctx = canvas.getContext('2d');
-	
-	var laView = new LinkAnalysisView({
+	laOptionsView = new LinkAnalysisOptionsView();
+	laDsColorView = new LinkAnalysisDataSourceColorView();
+	laView = new LinkAnalysisView({
 		model : new LinkAnalysisModel({ 
 			query: queryStr.query,
+			start: queryStr.start, 
 			rows: queryStr.rows, 
 			filterQuery: queryStr.filterQuery,
 			facetField: queryStr.facetField 
@@ -751,13 +941,15 @@ $(document).ready(function() {
 	});
 	
 	laView.search();
+	laView.model.set('start', '0'); 
+	
 	i2Disabled = false;
-
-	var laOptionsView = new LinkAnalysisOptionsView();
 
 	registerPageListeners();
 	$('#highLightId').bootstrapToggle(highlighting ? 'on' : 'off');
-
+	
+	
+	
 	if (nodes.length == 0) {
 		ALERT.warning("Data cannot be represented in the chart! Please try again.");
 	}
@@ -765,39 +957,65 @@ $(document).ready(function() {
 	$("#sidebarItemLinkAnalysis").css('display', 'inline');
 });
 
+Handlebars.registerHelper('textColor', function (hexColor) {
+	var rgb = hexToRgb(hexColor);
+    var o = Math.round(((parseInt(rgb.r) * 299) + (parseInt(rgb.g) * 587) + (parseInt(rgb.b) * 114)) /1000);
+    
+    return o > 125 ? 'black' : 'white';
+});	
+
 Handlebars.registerHelper('addDivider', function (index) {
 	return index == 0 ? "" : "<li class=\"divider\"></li>";
 });	
 
 Handlebars.registerHelper('getProperties', function (obj) {
-	var str = '';
-	str += '<tr>';
-	str += '<td>Document ID</td>';
-	str += '<td>' + obj['sourceAfiDocId'] + '</td>';
-	str += '</tr>';
-	str += '<tr>';
-	str += '<td>Node ID</td>';
-	str += '<td>' + obj['id'] + '</td>';
-	str += '</tr>';
+	var strArray = []; // use array instead of string concat for performance
+	strArray.push('<tr>');
+	strArray.push('<td>Node ID</td>');
+	strArray.push('<td>');
+	strArray.push(obj['id']);
+	strArray.push('</td>');
+	strArray.push('</tr>');
 	if (_.startsWith(obj['image'], "data:")) {
-		str += '<tr>';
-		str += '<td>Image</td>';
-		str += '<td><img src="' + obj['image'] + '" height="200px" width="200px"></td>';
-		str += '</tr>';
+		strArray.push('<tr>');
+		strArray.push('<td>Image</td>');
+		strArray.push('<td><img src="');
+		strArray.push(obj['image']);
+		strArray.push('" height="200px" width="200px"></td>');
+		strArray.push('</tr>');
 	}
-	for (var propertyName in obj.values) {
-		if (propertyName == "imageContent") {
-			continue;
+	_.forIn(obj.values, function(value, key) {
+		if (key === "imageContent") {
+			strArray.push('<tr>');
+			strArray.push('<td>More Image(s):</td>');
+			strArray.push('<td>');
+			if (typeof value === 'string') {
+				strArray.push('<img src="');
+				strArray.push(value);
+				strArray.push('" height="200px" width="200px">');
+			} else {
+				_.forEach(value, function(it) {
+					strArray.push('<img src="');
+					strArray.push(it);
+					strArray.push('" height="200px" width="200px"><br/>');
+				})
+			}
+			strArray.push('</td>');
+			strArray.push('</tr>');
+		} else {
+			var name = _.startCase(key);
+			strArray.push('<tr>');
+			strArray.push('<td>');
+			strArray.push(name);
+			strArray.push('</td>');
+			strArray.push('<td>');
+			strArray.push(value);
+			strArray.push('</td>');
+			strArray.push('</tr>');;
 		}
-		//var name = propertyName.split(/(?=[A-Z])/).join(" ");
-		var name = _.startCase(propertyName);
-		str += '<tr>';
-		str += '<td class="capitalize">' + name + '</td>';
-		str += '<td>' + obj.values[propertyName] + '</td>';
-		str += '</tr>';
-	}
+	})
 	
-	return str;
+	return strArray.join("");
 });	
 	        		
 Handlebars.registerHelper('loadSeeAlso', function (displayValue) {

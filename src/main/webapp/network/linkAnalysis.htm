@@ -44,6 +44,25 @@
 		<li>Select multiple node (by hold down the Ctrl key) and right-mouse click (with different image)</li>
 	</ul>
 
+<script id="hb-color-legend" type="text/x-handlebars-template">
+<table id="dsColorTableId" class="table table-bordered" style="font-size: smaller">
+    <thead>
+		<tr>
+		    <th>Data Source</th>
+		    <th>Color Name</th>
+		</tr>
+    </thead>
+    <tbody>
+	{{#each dsColors}}
+	<tr class="byDS" data-ds-id="{{this.group}}" style="background-color: {{this.color}}; color: {{textColor this.color}}">
+	    <td>{{this.group}}</td>
+	    <td>{{this.colorObj.name}}</td>
+	</tr>
+	{{/each}}
+    </tbody>
+</table>
+</script>
+
 <script id="hb-resolve-input" type="text/x-handlebars-template">
 <div id="resolveInputPanelId" title="Enter name for {{totalNodesSelected}} resolved object(s)">
 	<div class="col-md-12">
@@ -138,6 +157,7 @@
 						<button id="optionsTrigger" class="btn btn-default fa fa-cog"> Options</button>
 						<ul id="optionsMenu">
 						    <li id="laClearBtn"><a data-icon="fa-file-o" href="#"> Clear</a></li>
+						    <li id="laColorBtn"><a data-icon="fa-paint-brush" href="#"> Colors</a></li>
 						    <li>
 						    	<a data-icon="fa-sitemap"> Layouts</a>
 						        <ul> 
@@ -180,6 +200,10 @@
 
 <div id="i2DisabledId" title="Notice!" style="display: none">
     <p>Export to i2 is disabled after subsequent any search!</p>
+</div>
+
+<div id="colorLegendId" title="Data Source Colors">
+	<div id="colorLegendPanelId"></div>
 </div>
 
 <div id="resolveInputForm"></div>
