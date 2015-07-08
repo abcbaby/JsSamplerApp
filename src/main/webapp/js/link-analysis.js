@@ -262,7 +262,7 @@ function syncNetwork(jsonData) {
 	var newNodes = [];
 	var newEdges = [];
 	// don't bring in nodes/edges that has already been removed by user
-	_.each(_(jsonData.nodes).reverse().value(), function(it) {
+	_.each(jsonData.nodes, function(it) {
 		if (nodesDeleted.get(it.id) == null) {
 			newNodes.push(it);
 		}
@@ -605,7 +605,7 @@ function restoreDrawingSurface(ctx) {
 
 function registerNetworkListeners() {
 	network.on("oncontext", function (e) {
-		if (!highlighting && e.nodes.length != 0) {
+		if (e.nodes.length != 0) {
 			network.selectNodes(e.nodes);
 			var selection = network.getSelection();
 			var theTemplateScript = $("#hb-context-menu").html();
@@ -638,6 +638,52 @@ function registerNetworkListeners() {
 	network.on("click", function() {
 		$("#contextMenu").hide();
 	});
+
+    network.on("dragStart", function (params) {
+		if (highlighting) { 
+	    	drag = true;
+			rect.startX = params.pointer.DOM.x;
+			rect.startY = params.pointer.DOM.y;
+			container[0].style.cursor = "crosshair";
+			saveDrawingSurface();
+		}
+	});
+    
+/* Cannot use network dragging event since it will only be called when node or view is moved, 
+ * using "mousemove" instead     
+    network.on("dragging", function (params) {
+		var canvas = network.canvas.frame.canvas;
+		var ctx = canvas.getContext('2d');
+		rect.w = params.pointer.DOM.x - rect.startX;
+		rect.h = params.pointer.DOM.y - rect.startY ;
+		
+		if (restoreDrawingSurface(ctx)) {
+			drawHighlightRectangle(ctx);
+		}
+    });*/
+    
+    network.on("dragEnd", function (params) {
+		if (highlighting && drag) { 
+			container[0].style.cursor = "default";
+			var canvas = network.canvas.frame.canvas;
+			var ctx = canvas.getContext('2d');
+			rect.w = params.pointer.DOM.x - rect.startX;
+			rect.h = params.pointer.DOM.y - rect.startY ;
+			var newRect = rect;
+			
+			if (restoreDrawingSurface(ctx)) {
+				highlightNodes();
+			} else {
+				drawHighlightRectangle(ctx);
+				
+				setTimeout(function() {
+					highlightNodes();
+				}, 350);
+			}
+			drawingSurfaceImageData = null;
+			drag = false;
+		}
+    });	
 }
 
 function registerPageListeners() {
@@ -651,7 +697,9 @@ function registerPageListeners() {
 		queryList.push(selectedMenuItem);
 		switch (selectedMenuItem) {
 			case "View Detail":
-				ALERT.info("Detail not implemented yet!", 250);
+				// currently removed from menu
+				var selectedNodes = nodes.get(selection.nodes);
+				window.open('/search/document/' + selectedNodes[0]['sourceAfiDocId'],'_blank');
 				break;
 			case "Remove From Graph":
 				removeSelectedNodes();
@@ -801,18 +849,12 @@ function registerPageListeners() {
 	});
     
     container.on("mousedown", function(e) {
-		if (highlighting && e.button == 2) { 
+		if (highlighting) { 
 			// handles multiple selection w/ Ctrl key
 			selectedNodes = e.ctrlKey ? network.getSelectedNodes() : null;
-
-			rect.startX = e.pageX - this.offsetLeft;
-			rect.startY = e.pageY - this.offsetTop;
-			drag = true;
-			container[0].style.cursor = "crosshair";
-			saveDrawingSurface();
 		}
 	}); 
-	
+
 	container.on("mousemove", function(e) {
 		if (highlighting && drag) { 
 			var canvas = network.canvas.frame.canvas;
@@ -823,28 +865,6 @@ function registerPageListeners() {
 			if (restoreDrawingSurface(ctx)) {
 				drawHighlightRectangle(ctx);
 			}
-		}
-	});
-	
-	container.on("mouseup", function(e) {
-		if (highlighting && e.button == 2) { 
-			drag = false;
-			container[0].style.cursor = "default";
-			var canvas = network.canvas.frame.canvas;
-			var ctx = canvas.getContext('2d');
-			rect.w = (e.pageX - this.offsetLeft) - rect.startX;
-			rect.h = (e.pageY - this.offsetTop) - rect.startY ;
-			
-			if (restoreDrawingSurface(ctx)) {
-				highlightNodes();
-			} else {
-				drawHighlightRectangle(ctx);
-				
-				setTimeout(function() {
-					highlightNodes();
-				}, 350);
-			}
-			drawingSurfaceImageData = null;
 		}
 	});
 
