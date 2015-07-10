@@ -4,8 +4,7 @@
   <title>Network | Basic usage</title>
 	 
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-	<script type="text/javascript" src="/js/vis/vis.js"></script>
-	<link href="/js/vis/vis.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.4.0/vis.min.js"></script>
 
   <style type="text/css">
     #network {
@@ -78,26 +77,21 @@ function selectNodesFromHighlight() {
 	var nodesIdInDrawing = [];
 	var xRange = getStartToEnd(rect.startX, rect.w);
 	var yRange = getStartToEnd(rect.startY, rect.h);
-	if (typeof rect.startX !== "undefined" && typeof rect.startY !== "undefined"
-			&& typeof rect.w !== "undefined" && typeof rect.h !== "undefined") {
-		var allNodes = nodes.get({returnType:"Object"});
-		for (var i = 0; i < allNodes.length; i++) {
-			var curNode = allNodes[i];
-			var nodePosition = network.getPositions([curNode.id]);
-			var nodeXY = network.canvasToDOM({x: nodePosition[curNode.id].x, y: nodePosition[curNode.id].y})
-			if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end
-					&& yRange.start <= nodeXY.y && nodeXY.y <= yRange.end) {
-				nodesIdInDrawing.push(curNode.id);
-			}
+
+	var allNodes = nodes.get();
+	for (var i = 0; i < allNodes.length; i++) {
+		var curNode = allNodes[i];
+		var nodePosition = network.getPositions([curNode.id]);
+		var nodeXY = network.canvasToDOM({x: nodePosition[curNode.id].x, y: nodePosition[curNode.id].y});
+		if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end && yRange.start <= nodeXY.y && nodeXY.y <= yRange.end) {
+			nodesIdInDrawing.push(curNode.id);
 		}
 	}
 	network.selectNodes(nodesIdInDrawing);
 }
 
 function getStartToEnd(start, theLen) {
-	return theLen > 0
-		? {start: start, end: start + theLen}
-		: {start: start + theLen, end: start};
+	return theLen > 0 ? {start: start, end: start + theLen} : {start: start + theLen, end: start};
 }
 
 $(document).ready(function() {
@@ -118,6 +112,7 @@ $(document).ready(function() {
     
     container.on("mousedown", function(e) {
 		if (e.button == 2) { 
+			selectedNodes = e.ctrlKey ? network.getSelectedNodes() : null;
 			saveDrawingSurface();
 			var that = this;
 			rect.startX = e.pageX - this.offsetLeft;
@@ -137,7 +132,7 @@ $(document).ready(function() {
 		}
 	});
 
-	document.body.oncontextmenu = function() {return false;}
+	document.body.oncontextmenu = function() {return false;};
 	network = new vis.Network(container[0], data, options);
 	canvas = network.canvas.frame.canvas;
 	ctx = canvas.getContext('2d');
