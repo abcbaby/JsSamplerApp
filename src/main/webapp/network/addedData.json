@@ -1,179 +1,366 @@
 {
   "nodes": [
     {
-      "id": "Event|2011-07-27T07:40:09", 
-      "label": "2011-07-27T07:40:09", 
-      "title": "Event HVH|PPL_CRSG|1326289269", 
+      "uuid": "24fb02ab8dfa494e8ff6e08f79cfe566", 
+      "id": "Event|2012-07-18T18:46:05|L254", 
+      "label": "2012-07-18T18:46:05 L254", 
+      "title": "Type: Event<br\/>Location: L254<br\/>Timestamp: 2012-07-18T18:46:05<br\/>Type: Primary Person Border Crossing<br\/>Label: 2012-07-18T18:46:05 L254<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: XK0|PEPL_CRSG|6336647273", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/event.png", 
       "type": "Event", 
-      "imageContent": "", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269", 
+      "image": "/img/event.png", 
+      "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273", 
       "tags": [
-        "event", 
-        "orphan"
+        "event"
       ], 
       "values": {
-        "timestamp": "2011-07-27T07:40:09", 
-        "type": "Primary Vehicle"
+        "location": "L254", 
+        "timestamp": "2012-07-18T18:46:05", 
+        "type": "Primary Person Border Crossing", 
+        "label": "2012-07-18T18:46:05 L254", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273"
       }, 
       "seeAlso": [
         {
-          "displayValue": "2011-07-27T07:40:09", 
+          "displayValue": "2012-07-18T18:46:05", 
           "label": "Event", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "DATE_dts:(2011-07-27T07:40:09)", 
-              "unfielded": "2011-07-27T07:40:09"
+              "fielded": "DATE_dts:(\"2012-07-18T18:46:05\")", 
+              "unfielded": "\"2012-07-18T18:46:05\""
             }, 
             "and": {
-              "fielded": "+DATE_dts:(+2011-07-27T07:40:09)", 
-              "unfielded": "+2011-07-27T07:40:09"
+              "fielded": "+DATE_dts:(+\"2012-07-18T18:46:05\")", 
+              "unfielded": "\"+2012-07-18T18:46:05\""
             }
           }
         }
       ]
     }, 
     {
-      "id": "96bfc6605f1a43718e0d9b828de355a7", 
-      "label": "", 
-      "title": "Person HVH|PPL_CRSG|1326289269", 
+      "uuid": "5172c8d5eedf4bb398551c437cf54387", 
+      "id": "Person|JONES|DARING|20050501", 
+      "label": "JONES DARING 20050501", 
+      "title": "Type: Person<br\/>First Name: DARING<br\/>Last Name: JONES<br\/>Gender: F<br\/>Birth Date: 20050501<br\/>Label: JONES DARING 20050501<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: XK0|PEPL_CRSG|6336647273", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/person-unk.png", 
       "type": "Person", 
-      "imageContent": "", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269", 
+      "image": "/img/person-unk.png", 
+      "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273", 
       "tags": [
-        "person-agent", 
-        "orphan"
+        "person"
       ], 
       "values": {
-        "firstName": "ANDY", 
-        "lastName": "TOLL"
+        "firstName": "DARING", 
+        "lastName": "JONES", 
+        "gender": "F", 
+        "birthDate": "20050501", 
+        "label": "JONES DARING 20050501", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273"
       }, 
       "seeAlso": [
         {
-          "displayValue": "ANDY TOLL", 
+          "displayValue": "DARING JONES", 
           "label": "Person", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "NAME_txt:(ANDY TOLL)", 
-              "unfielded": "ANDY TOLL"
+              "fielded": "NAME_txt:(DARING JONES)", 
+              "unfielded": "DARING JONES"
             }, 
             "and": {
-              "fielded": "+NAME_txt:(+ANDY +TOLL)", 
-              "unfielded": "+ANDY +TOLL"
+              "fielded": "+NAME_txt:(+DARING +JONES)", 
+              "unfielded": "+DARING +JONES"
+            }
+          }
+        }, 
+        {
+          "displayValue": "20050501", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "DATE_OF_BIRTH_dts:(20050501)", 
+              "unfielded": "20050501"
+            }, 
+            "and": {
+              "fielded": "+DATE_OF_BIRTH_dts:(+20050501)", 
+              "unfielded": "+20050501"
+            }
+          }
+        }, 
+        {
+          "displayValue": "DARING JONES 20050501", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "NAME_txt:(DARING JONES) DATE_OF_BIRTH_dts:(20050501)", 
+              "unfielded": "DARING JONES 20050501"
+            }, 
+            "and": {
+              "fielded": "+NAME_txt:(+DARING +JONES) +DATE_OF_BIRTH_dts:(+20050501)", 
+              "unfielded": "+DARING +JONES +20050501"
             }
           }
         }
       ]
     }, 
     {
-      "id": "Port|L242", 
-      "label": "L242", 
-      "title": "Port HVH|PPL_CRSG|1326289269", 
+      "uuid": "9992d71997ef4663993b9f45cf078481", 
+      "id": "Port|2506", 
+      "label": "2506", 
+      "title": "Type: Port<br\/>Code: 2506<br\/>Label: 2506<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: XK0|PEPL_CRSG|6336647273", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/Port.png", 
       "type": "Port", 
-      "imageContent": "", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273", 
       "tags": [
-        "port-crossing", 
-        "orphan"
+        "port-processing"
       ], 
       "values": {
-        "code": "L242"
+        "code": "2506", 
+        "label": "2506", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273"
       }, 
       "seeAlso": [
         {
-          "displayValue": "L242", 
+          "displayValue": "2506", 
           "label": "Port", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "PORT_ENTRY_txt:(L242)", 
-              "unfielded": "L242"
+              "fielded": "PORT_ENTRY_txt:(2506)", 
+              "unfielded": "2506"
             }, 
             "and": {
-              "fielded": "+PORT_ENTRY_txt:(+L242)", 
-              "unfielded": "+L242"
+              "fielded": "+PORT_ENTRY_txt:(+2506)", 
+              "unfielded": "+2506"
             }
           }
         }
       ]
     }, 
     {
-      "id": "Port|2402", 
-      "label": "2402", 
-      "title": "Port HVH|PPL_CRSG|1326289269", 
+      "uuid": "cbc5fefc5b1a4c0f9e8e322cf43bf1bc", 
+      "id": "Port|L254", 
+      "label": "L254", 
+      "title": "Type: Port<br\/>Code: L254<br\/>Label: L254<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: XK0|PEPL_CRSG|6336647273", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/Port.png", 
       "type": "Port", 
-      "imageContent": "", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273", 
       "tags": [
-        "port-crossing", 
-        "orphan"
+        "site-processing"
       ], 
       "values": {
-        "code": "2402"
+        "code": "L254", 
+        "label": "L254", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273"
       }, 
       "seeAlso": [
         {
-          "displayValue": "2402", 
+          "displayValue": "L254", 
           "label": "Port", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "PORT_ENTRY_txt:(2402)", 
-              "unfielded": "2402"
+              "fielded": "PORT_ENTRY_txt:(L254)", 
+              "unfielded": "L254"
             }, 
             "and": {
-              "fielded": "+PORT_ENTRY_txt:(+2402)", 
-              "unfielded": "+2402"
+              "fielded": "+PORT_ENTRY_txt:(+L254)", 
+              "unfielded": "+L254"
             }
           }
         }
       ]
     }, 
     {
-      "id": "Vehicle|MM_640SKR6_MM_640SKR6_640SKR6", 
-      "label": "MM 640SKR6 MM 640SKR6 640SKR6", 
-      "title": "Vehicle HVH|PPL_CRSG|1326289269", 
+      "uuid": "23f462c15b33443094ceb937b0080489", 
+      "id": "Event|2011-08-19T19:28:23|LMN", 
+      "label": "2011-08-19T19:28:23 LMN", 
+      "title": "Type: Event<br\/>Location: LMN<br\/>Timestamp: 2011-08-19T19:28:23<br\/>Type: Primary Person Border Crossing<br\/>Label: 2011-08-19T19:28:23 LMN<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: 0SI|PEPL_CRSG|5652776032", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/car.png", 
-      "type": "Vehicle", 
-      "imageContent": "", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269", 
+      "type": "Event", 
+      "image": "/img/event.png", 
+      "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032", 
       "tags": [
-        "orphan", 
-        "vehicle"
+        "event"
       ], 
       "values": {
-        "number": "640SKR6", 
-        "issueStateCode": "MM", 
-        "identity": "640SKR6"
+        "location": "LMN", 
+        "timestamp": "2011-08-19T19:28:23", 
+        "type": "Primary Person Border Crossing", 
+        "label": "2011-08-19T19:28:23 LMN", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032"
       }, 
       "seeAlso": [
         {
-          "displayValue": "MM 640SKR6 MM 640SKR6 640SKR6", 
-          "label": "Vehicle", 
+          "displayValue": "2011-08-19T19:28:23", 
+          "label": "Event", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "LICENSE_PLATE_txt:(MM 640SKR6) LICENSE_PLATE_txt:(MM 640SKR6) LICENSE_PLATE_txt:(640SKR6)", 
-              "unfielded": "MM 640SKR6 MM 640SKR6 640SKR6"
+              "fielded": "DATE_dts:(\"2011-08-19T19:28:23\")", 
+              "unfielded": "\"2011-08-19T19:28:23\""
             }, 
             "and": {
-              "fielded": "+LICENSE_PLATE_txt:(+MM +640SKR6) +LICENSE_PLATE_txt:(+MM +640SKR6) +LICENSE_PLATE_txt:(+640SKR6)", 
-              "unfielded": "+MM +640SKR6 +MM +640SKR6 +640SKR6"
+              "fielded": "+DATE_dts:(+\"2011-08-19T19:28:23\")", 
+              "unfielded": "\"+2011-08-19T19:28:23\""
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "uuid": "604a8e022b40491d8e5a0e87ac092778", 
+      "id": "Person|JONES|JOHN|19540424", 
+      "label": "JONES JOHN 19540424", 
+      "title": "Type: Person<br\/>First Name: JOHN<br\/>Last Name: JONES<br\/>Gender: M<br\/>Birth Date: 19540424<br\/>Label: JONES JOHN 19540424<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: 0SI|PEPL_CRSG|5652776032", 
+      "shape": "image", 
+      "size": "20", 
+      "type": "Person", 
+      "image": "/img/person-unk.png", 
+      "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032", 
+      "tags": [
+        "person"
+      ], 
+      "values": {
+        "firstName": "JOHN", 
+        "lastName": "JONES", 
+        "gender": "M", 
+        "birthDate": "19540424", 
+        "label": "JONES JOHN 19540424", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "JOHN JONES", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "NAME_txt:(JOHN JONES)", 
+              "unfielded": "JOHN JONES"
+            }, 
+            "and": {
+              "fielded": "+NAME_txt:(+JOHN +JONES)", 
+              "unfielded": "+JOHN +JONES"
+            }
+          }
+        }, 
+        {
+          "displayValue": "19540424", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "DATE_OF_BIRTH_dts:(19540424)", 
+              "unfielded": "19540424"
+            }, 
+            "and": {
+              "fielded": "+DATE_OF_BIRTH_dts:(+19540424)", 
+              "unfielded": "+19540424"
+            }
+          }
+        }, 
+        {
+          "displayValue": "JOHN JONES 19540424", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "NAME_txt:(JOHN JONES) DATE_OF_BIRTH_dts:(19540424)", 
+              "unfielded": "JOHN JONES 19540424"
+            }, 
+            "and": {
+              "fielded": "+NAME_txt:(+JOHN +JONES) +DATE_OF_BIRTH_dts:(+19540424)", 
+              "unfielded": "+JOHN +JONES +19540424"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "uuid": "84a557ee81e342fab60fc313a61a806f", 
+      "id": "Port|2504", 
+      "label": "2504", 
+      "title": "Type: Port<br\/>Code: 2504<br\/>Label: 2504<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: 0SI|PEPL_CRSG|5652776032", 
+      "shape": "image", 
+      "size": "20", 
+      "type": "Port", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032", 
+      "tags": [
+        "port-processing"
+      ], 
+      "values": {
+        "code": "2504", 
+        "label": "2504", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "2504", 
+          "label": "Port", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "PORT_ENTRY_txt:(2504)", 
+              "unfielded": "2504"
+            }, 
+            "and": {
+              "fielded": "+PORT_ENTRY_txt:(+2504)", 
+              "unfielded": "+2504"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "uuid": "9293927f85d74c2b9fd24090ca24c5e8", 
+      "id": "Port|LMN", 
+      "label": "LMN", 
+      "title": "Type: Port<br\/>Code: LMN<br\/>Label: LMN<br\/>Source: PEPL_CRSG<br\/>Source Afi Doc Id: 0SI|PEPL_CRSG|5652776032", 
+      "shape": "image", 
+      "size": "20", 
+      "type": "Port", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032", 
+      "tags": [
+        "site-processing"
+      ], 
+      "values": {
+        "code": "LMN", 
+        "label": "LMN", 
+        "source": "PEPL_CRSG", 
+        "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "LMN", 
+          "label": "Port", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "PORT_ENTRY_txt:(LMN)", 
+              "unfielded": "LMN"
+            }, 
+            "and": {
+              "fielded": "+PORT_ENTRY_txt:(+LMN)", 
+              "unfielded": "+LMN"
             }
           }
         }
@@ -182,48 +369,76 @@
   ], 
   "edges": [
     {
-      "id": "Port|2402-Event|2011-07-27T07:40:09", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "Port|2402", 
-      "to": "Event|2011-07-27T07:40:09", 
-      "font": { "align": "middle" },
+      "id": "Person|JONES|DARING|20050501-Event|2012-07-18T18:46:05|L254", 
+      "uuid": "3b33338e0c8946d781aa00cc797f59d0", 
+      "label": "traveler crossed", 
+      "title": "traveler crossed", 
+      "from": "Person|JONES|DARING|20050501", 
+      "to": "Event|2012-07-18T18:46:05|L254", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
       "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269"
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273"
     }, 
     {
-      "id": "Vehicle|MM_640SKR6_MM_640SKR6_640SKR6-Event|2011-07-27T07:40:09", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "Vehicle|MM_640SKR6_MM_640SKR6_640SKR6", 
-      "to": "Event|2011-07-27T07:40:09", 
-      "font": { "align": "middle" },
+      "id": "Port|L254-Event|2012-07-18T18:46:05|L254", 
+      "uuid": "20a6c16d3789436599c58fa3d3534199", 
+      "label": "processed at", 
+      "title": "processed at", 
+      "from": "Port|L254", 
+      "to": "Event|2012-07-18T18:46:05|L254", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
       "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269"
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273"
     }, 
     {
-      "id": "96bfc6605f1a43718e0d9b828de355a7-Event|2011-07-27T07:40:09", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "96bfc6605f1a43718e0d9b828de355a7", 
-      "to": "Event|2011-07-27T07:40:09", 
-      "font": { "align": "middle" },
+      "id": "Port|L254-Port|2506", 
+      "uuid": "5df103e33beb4e469c8e00dc4f8c854d", 
+      "label": "located at", 
+      "title": "located at", 
+      "from": "Port|L254", 
+      "to": "Port|2506", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
       "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269"
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "XK0|PEPL_CRSG|6336647273"
     }, 
     {
-      "id": "Port|L242-Event|2011-07-27T07:40:09", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "Port|L242", 
-      "to": "Event|2011-07-27T07:40:09", 
-      "font": { "align": "middle" },
+      "id": "Person|JONES|JOHN|19540424-Event|2011-08-19T19:28:23|LMN", 
+      "uuid": "54c362bff2d74966a01a97c38e93f7cd", 
+      "label": "traveler crossed", 
+      "title": "traveler crossed", 
+      "from": "Person|JONES|JOHN|19540424", 
+      "to": "Event|2011-08-19T19:28:23|LMN", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
       "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "HVH|PPL_CRSG|1326289269"
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032"
+    }, 
+    {
+      "id": "Port|LMN-Event|2011-08-19T19:28:23|LMN", 
+      "uuid": "ff30ade945944b4e830e5d63b881038e", 
+      "label": "processed at", 
+      "title": "processed at", 
+      "from": "Port|LMN", 
+      "to": "Event|2011-08-19T19:28:23|LMN", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
+      "direction": "NONE", 
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032"
+    }, 
+    {
+      "id": "Port|LMN-Port|2504", 
+      "uuid": "fd52f0c1aae446798325f7c9052df24d", 
+      "label": "located at", 
+      "title": "located at", 
+      "from": "Port|LMN", 
+      "to": "Port|2504", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
+      "direction": "NONE", 
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "0SI|PEPL_CRSG|5652776032"
     }
   ]
 }

@@ -1,180 +1,418 @@
 {
   "nodes": [
     {
-      "id": "Event|2011-07-15T19:36:14", 
-      "label": "2011-07-15T19:36:14", 
-      "title": "Event VX0|VHCL_CRSG|123", 
+      "uuid": "826e98ef829d44cab29fe6cfb3e88202", 
+      "id": "Event|2013-06-17T08:01:10|LMN", 
+      "label": "2013-06-17T08:01:10 LMN", 
+      "title": "Type: Event<br\/>Location: LMN<br\/>Timestamp: 2013-06-17T08:01:10<br\/>Type: Person<br\/>Label: 2013-06-17T08:01:10 LMN<br\/>Source: People<br\/>Source Afi Doc Id: GIN|People|1918125328", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/event.png", 
       "type": "Event", 
-      "imageContent": "", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "image": "/img/event.png", 
+      "sourceAfiDocId": "GIN|People|1918125328", 
       "tags": [
-        "event", 
-        "orphan"
+        "event"
       ], 
       "values": {
-        "timestamp": "2011-07-15T19:36:14", 
-        "type": "Primary Vehicle"
+        "location": "LMN", 
+        "timestamp": "2013-06-17T08:01:10", 
+        "type": "Person", 
+        "label": "2013-06-17T08:01:10 LMN", 
+        "source": "People", 
+        "sourceAfiDocId": "GIN|People|1918125328"
       }, 
       "seeAlso": [
         {
-          "displayValue": "2011-07-15T19:36:14", 
+          "displayValue": "2013-06-17T08:01:10", 
           "label": "Event", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "DATE_dts:(2011-07-15T19:36:14)", 
-              "unfielded": "2011-07-15T19:36:14"
+              "fielded": "DATE_dts:(\"2013-06-17T08:01:10\")", 
+              "unfielded": "\"2013-06-17T08:01:10\""
             }, 
             "and": {
-              "fielded": "+DATE_dts:(+2011-07-15T19:36:14)", 
-              "unfielded": "+2011-07-15T19:36:14"
+              "fielded": "+DATE_dts:(+\"2013-06-17T08:01:10\")", 
+              "unfielded": "\"+2013-06-17T08:01:10\""
             }
           }
         }
       ]
     }, 
     {
-      "id": "7219cb7f88164e1b8109139d6589084c", 
-      "label": "", 
-      "title": "Person VX0|VHCL_CRSG|123", 
+      "uuid": "3a585a759f114e97b8750a206c0d00b3", 
+      "id": "Person|SMITH|SMITH|19880808", 
+      "label": "SMITH SMITH 19880808", 
+      "title": "Type: Person<br\/>First Name: SMITH<br\/>Last Name: SMITH<br\/>Gender: M<br\/>Birth Date: 19880808<br\/>Label: SMITH SMITH 19880808<br\/>Source: People<br\/>Source Afi Doc Id: GIN|People|1918125328", 
       "shape": "image", 
       "size": "20", 
-      "image": "data:image/png;base64,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", 
       "type": "Person", 
-      "imageContent": "", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "image": "/img/person-unk.png", 
+      "sourceAfiDocId": "GIN|People|1918125328", 
       "tags": [
-        "person-agent", 
-        "orphan"
+        "person"
       ], 
       "values": {
-        "firstName": "C.", 
-        "lastName": "JONES", 
-        "middleName": "W"
+        "firstName": "SMITH", 
+        "lastName": "SMITH", 
+        "gender": "M", 
+        "birthDate": "19880808", 
+        "label": "SMITH SMITH 19880808", 
+        "source": "People", 
+        "sourceAfiDocId": "GIN|People|1918125328"
       }, 
       "seeAlso": [
         {
-          "displayValue": "C. W JONES", 
+          "displayValue": "SMITH SMITH", 
           "label": "Person", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "NAME_txt:(C. W JONES)", 
-              "unfielded": "C. W JONES"
+              "fielded": "NAME_txt:(SMITH SMITH)", 
+              "unfielded": "SMITH SMITH"
             }, 
             "and": {
-              "fielded": "+NAME_txt:(+C. +W +JONES)", 
-              "unfielded": "+C. +W +JONES"
+              "fielded": "+NAME_txt:(+SMITH +SMITH)", 
+              "unfielded": "+SMITH +SMITH"
+            }
+          }
+        }, 
+        {
+          "displayValue": "19880808", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "DATE_OF_BIRTH_dts:(19880808)", 
+              "unfielded": "19880808"
+            }, 
+            "and": {
+              "fielded": "+DATE_OF_BIRTH_dts:(+19880808)", 
+              "unfielded": "+19880808"
+            }
+          }
+        }, 
+        {
+          "displayValue": "SMITH SMITH 19880808", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "NAME_txt:(SMITH SMITH) DATE_OF_BIRTH_dts:(19880808)", 
+              "unfielded": "SMITH SMITH 19880808"
+            }, 
+            "and": {
+              "fielded": "+NAME_txt:(+SMITH +SMITH) +DATE_OF_BIRTH_dts:(+19880808)", 
+              "unfielded": "+SMITH +SMITH +19880808"
             }
           }
         }
       ]
     }, 
     {
-      "id": "Port|L361", 
-      "label": "L361", 
-      "title": "Port VX0|VHCL_CRSG|123", 
+      "uuid": "5be6cb02aba84a99b67a42b6af43ecd7", 
+      "id": "Port|1234", 
+      "label": "1234", 
+      "title": "Type: Port<br\/>Code: 1234<br\/>Label: 1234<br\/>Source: People<br\/>Source Afi Doc Id: GIN|People|1918125328", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/Port.png", 
       "type": "Port", 
-      "imageContent": "", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "GIN|People|1918125328", 
       "tags": [
-        "port-crossing", 
-        "orphan"
+        "port-processing"
       ], 
       "values": {
-        "code": "L361"
+        "code": "1234", 
+        "label": "1234", 
+        "source": "People", 
+        "sourceAfiDocId": "GIN|People|1918125328"
       }, 
       "seeAlso": [
         {
-          "displayValue": "L361", 
+          "displayValue": "1234", 
           "label": "Port", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "PORT_ENTRY_txt:(L361)", 
-              "unfielded": "L361"
+              "fielded": "PORT_ENTRY_txt:(1234)", 
+              "unfielded": "1234"
             }, 
             "and": {
-              "fielded": "+PORT_ENTRY_txt:(+L361)", 
-              "unfielded": "+L361"
+              "fielded": "+PORT_ENTRY_txt:(+1234)", 
+              "unfielded": "+1234"
             }
           }
         }
       ]
     }, 
     {
-      "id": "Port|3604", 
-      "label": "3604", 
-      "title": "Port VX0|VHCL_CRSG|123", 
+      "uuid": "663b8d325fc04338be70cb3cd1a8bb91", 
+      "id": "Port|LMN", 
+      "label": "LMN", 
+      "title": "Type: Port<br\/>Code: LMN<br\/>Label: LMN<br\/>Source: People<br\/>Source Afi Doc Id: GIN|People|1918125328", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/Port.png", 
       "type": "Port", 
-      "imageContent": "", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "GIN|People|1918125328", 
       "tags": [
-        "port-crossing", 
-        "orphan"
+        "site-processing"
       ], 
       "values": {
-        "code": "3604"
+        "code": "LMN", 
+        "label": "LMN", 
+        "source": "People", 
+        "sourceAfiDocId": "GIN|People|1918125328"
       }, 
       "seeAlso": [
         {
-          "displayValue": "3604", 
+          "displayValue": "LMN", 
           "label": "Port", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "PORT_ENTRY_txt:(3604)", 
-              "unfielded": "3604"
+              "fielded": "PORT_ENTRY_txt:(LMN)", 
+              "unfielded": "LMN"
             }, 
             "and": {
-              "fielded": "+PORT_ENTRY_txt:(+3604)", 
-              "unfielded": "+3604"
+              "fielded": "+PORT_ENTRY_txt:(+LMN)", 
+              "unfielded": "+LMN"
             }
           }
         }
       ]
     }, 
     {
-      "id": "Vehicle|ON_5895YY_ON_5895YY_5895YY", 
-      "label": "5895YY", 
-      "title": "Vehicle VX0|VHCL_CRSG|123", 
+      "uuid": "02b5cae1beb442a586195479c911053c", 
+      "id": "Event|2011-07-19T12:09:48|L094", 
+      "label": "2011-07-19T12:09:48 L094", 
+      "title": "Type: Event<br\/>Location: L094<br\/>Timestamp: 2011-07-19T12:09:48<br\/>Type: Person<br\/>Label: 2011-07-19T12:09:48 L094<br\/>Source: People<br\/>Source Afi Doc Id: CUC|People|5577649730", 
       "shape": "image", 
       "size": "20", 
-      "image": "/img/car.png", 
+      "type": "Event", 
+      "image": "/img/event.png", 
+      "sourceAfiDocId": "CUC|People|5577649730", 
+      "tags": [
+        "event"
+      ], 
+      "values": {
+        "location": "L094", 
+        "timestamp": "2011-07-19T12:09:48", 
+        "type": "Person", 
+        "label": "2011-07-19T12:09:48 L094", 
+        "source": "People", 
+        "sourceAfiDocId": "CUC|People|5577649730"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "2011-07-19T12:09:48", 
+          "label": "Event", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "DATE_dts:(\"2011-07-19T12:09:48\")", 
+              "unfielded": "\"2011-07-19T12:09:48\""
+            }, 
+            "and": {
+              "fielded": "+DATE_dts:(+\"2011-07-19T12:09:48\")", 
+              "unfielded": "\"+2011-07-19T12:09:48\""
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "uuid": "17cf6dcca83942418e034a3021577f92", 
+      "id": "Person|SMITH|JOHN|20050419", 
+      "label": "SMITH JOHN 20050419", 
+      "title": "Type: Person<br\/>First Name: JOHN<br\/>Last Name: SMITH<br\/>Birth Date: 20050419<br\/>Label: SMITH JOHN 20050419<br\/>Source: People<br\/>Source Afi Doc Id: CUC|People|5577649730", 
+      "shape": "image", 
+      "size": "20", 
+      "type": "Person", 
+      "image": "/img/person-unk.png", 
+      "sourceAfiDocId": "CUC|People|5577649730", 
+      "tags": [
+        "person"
+      ], 
+      "values": {
+        "firstName": "JOHN", 
+        "lastName": "SMITH", 
+        "birthDate": "20050419", 
+        "label": "SMITH JOHN 20050419", 
+        "source": "People", 
+        "sourceAfiDocId": "CUC|People|5577649730"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "JOHN SMITH", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "NAME_txt:(JOHN SMITH)", 
+              "unfielded": "JOHN SMITH"
+            }, 
+            "and": {
+              "fielded": "+NAME_txt:(+JOHN +SMITH)", 
+              "unfielded": "+JOHN +SMITH"
+            }
+          }
+        }, 
+        {
+          "displayValue": "20050419", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "DATE_OF_BIRTH_dts:(20050419)", 
+              "unfielded": "20050419"
+            }, 
+            "and": {
+              "fielded": "+DATE_OF_BIRTH_dts:(+20050419)", 
+              "unfielded": "+20050419"
+            }
+          }
+        }, 
+        {
+          "displayValue": "JOHN SMITH 20050419", 
+          "label": "Person", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "NAME_txt:(JOHN SMITH) DATE_OF_BIRTH_dts:(20050419)", 
+              "unfielded": "JOHN SMITH 20050419"
+            }, 
+            "and": {
+              "fielded": "+NAME_txt:(+JOHN +SMITH) +DATE_OF_BIRTH_dts:(+20050419)", 
+              "unfielded": "+JOHN +SMITH +20050419"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "uuid": "56fa828db01f40b7934ebc4cd4810159", 
+      "id": "Port|DEFG", 
+      "label": "DEFG", 
+      "title": "Type: Port<br\/>Code: DEFG<br\/>Label: DEFG<br\/>Source: People<br\/>Source Afi Doc Id: CUC|People|5577649730", 
+      "shape": "image", 
+      "size": "20", 
+      "type": "Port", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "CUC|People|5577649730", 
+      "tags": [
+        "port-processing"
+      ], 
+      "values": {
+        "code": "DEFG", 
+        "label": "DEFG", 
+        "source": "People", 
+        "sourceAfiDocId": "CUC|People|5577649730"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "DEFG", 
+          "label": "Port", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "PORT_ENTRY_txt:(DEFG)", 
+              "unfielded": "DEFG"
+            }, 
+            "and": {
+              "fielded": "+PORT_ENTRY_txt:(+DEFG)", 
+              "unfielded": "+DEFG"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "uuid": "0776c263db5c43b9bdb77e0320a6ef04", 
+      "id": "Port|ABC", 
+      "label": "ABC", 
+      "title": "Type: Port<br\/>Code: ABC<br\/>Label: ABC<br\/>Source: People<br\/>Source Afi Doc Id: CUC|People|5577649730", 
+      "shape": "image", 
+      "size": "20", 
+      "type": "Port", 
+      "image": "/img/Port.png", 
+      "sourceAfiDocId": "CUC|People|5577649730", 
+      "tags": [
+        "site-processing"
+      ], 
+      "values": {
+        "code": "ABC", 
+        "label": "ABC", 
+        "source": "People", 
+        "sourceAfiDocId": "CUC|People|5577649730"
+      }, 
+      "seeAlso": [
+        {
+          "displayValue": "ABC", 
+          "label": "Port", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "PORT_ENTRY_txt:(ABC)", 
+              "unfielded": "ABC"
+            }, 
+            "and": {
+              "fielded": "+PORT_ENTRY_txt:(+ABC)", 
+              "unfielded": "+ABC"
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "uuid": "764f0ca104034663800f9b7a3b595867", 
+      "id": "Vehicle|LP-1234", 
+      "label": "LP-1234", 
+      "title": "Type: Vehicle<br\/>Number: AWTA911<br\/>Issue State Code: ON<br\/>Label: LP-1234<br\/>Source: People<br\/>Source Afi Doc Id: CUC|People|5577649730", 
+      "shape": "image", 
+      "size": "20", 
       "type": "Vehicle", 
-      "imageContent": "", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123", 
+      "image": "/img/car.png", 
+      "sourceAfiDocId": "CUC|People|5577649730", 
       "tags": [
-        "orphan", 
         "vehicle"
       ], 
       "values": {
-        "number": "5895YY", 
+        "number": "AWTA911", 
         "issueStateCode": "ON", 
-        "identity": "5895YY"
+        "label": "LP-1234", 
+        "source": "People", 
+        "sourceAfiDocId": "CUC|People|5577649730"
       }, 
       "seeAlso": [
         {
-          "displayValue": "5895YY", 
+          "displayValue": "LP-1234", 
           "label": "Vehicle", 
           "type": "SOLR", 
           "queries": {
             "or": {
-              "fielded": "LICENSE_PLATE_txt:(ON 5895YY) LICENSE_PLATE_txt:(ON 5895YY) LICENSE_PLATE_txt:(5895YY)", 
-              "unfielded": "5895YY"
+              "fielded": "LICENSE_PLATE_txt:(LP-1234)", 
+              "unfielded": "LP-1234"
             }, 
             "and": {
-              "fielded": "+LICENSE_PLATE_txt:(+ON +5895YY) +LICENSE_PLATE_txt:(+ON +5895YY) +LICENSE_PLATE_txt:(+5895YY)", 
-              "unfielded": "+ON +5895YY +ON +5895YY +5895YY"
+              "fielded": "+LICENSE_PLATE_txt:(+LP +1234)", 
+              "unfielded": "+LP +1234"
+            }
+          }
+        }, 
+        {
+          "displayValue": "LP1234", 
+          "label": "Vehicle", 
+          "type": "SOLR", 
+          "queries": {
+            "or": {
+              "fielded": "LICENSE_PLATE_txt:(LP1234)", 
+              "unfielded": "LP1234"
+            }, 
+            "and": {
+              "fielded": "+LICENSE_PLATE_txt:(+LP1234)", 
+              "unfielded": "+LP1234"
             }
           }
         }
@@ -183,48 +421,100 @@
   ], 
   "edges": [
     {
-      "id": "7219cb7f88164e1b8109139d6589084c-Event|2011-07-15T19:36:14", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "7219cb7f88164e1b8109139d6589084c", 
-      "to": "Event|2011-07-15T19:36:14", 
-      "font": { "align": "middle" },
+      "id": "Person|SMITH|SMITH|19880808-Event|2013-06-17T08:01:10|LMN", 
+      "uuid": "768e51cc60a84804b45f55f048bd8a8e", 
+      "label": "traveler crossed", 
+      "title": "traveler crossed", 
+      "from": "Person|SMITH|SMITH|19880808", 
+      "to": "Event|2013-06-17T08:01:10|LMN", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
       "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
-    },
-    {
-      "id": "Port|L361-Event|2011-07-15T19:36:14", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "Port|L361", 
-      "to": "Event|2011-07-15T19:36:14", 
-      "font": { "align": "middle" },
-      "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "GIN|People|1918125328"
     }, 
     {
-      "id": "Vehicle|ON_5895YY_ON_5895YY_5895YY-Event|2011-07-15T19:36:14", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "Vehicle|ON_5895YY_ON_5895YY_5895YY", 
-      "to": "Event|2011-07-15T19:36:14", 
-      "font": { "align": "middle" },
+      "id": "Port|LMN-Event|2013-06-17T08:01:10|LMN", 
+      "uuid": "c99b6ddf4e144376882c08669f842f22", 
+      "label": "processed at", 
+      "title": "processed at", 
+      "from": "Port|LMN", 
+      "to": "Event|2013-06-17T08:01:10|LMN", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
       "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "GIN|People|1918125328"
     }, 
     {
-      "id": "Port|3604-Event|2011-07-15T19:36:14", 
-      "label": "relates to", 
-      "title": "relates to", 
-      "from": "Port|3604", 
-      "to": "Event|2011-07-15T19:36:14", 
-      "font": { "align": "middle" },
+      "id": "Port|LMN-Port|1234", 
+      "uuid": "9658a3f6004443aa9db3240496406831", 
+      "label": "located at", 
+      "title": "located at", 
+      "from": "Port|LMN", 
+      "to": "Port|1234", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
       "direction": "NONE", 
-      "labelAlignment": "line-center", 
-      "sourceAfiDocId": "VX0|VHCL_CRSG|123"
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "GIN|People|1918125328"
+    }, 
+    {
+      "id": "Person|SMITH|JOHN|20050419-Event|2011-07-19T12:09:48|L094", 
+      "uuid": "cc6bac0f11654c12a1ac9ec5ccb0c600", 
+      "label": "traveler crossed", 
+      "title": "traveler crossed", 
+      "from": "Person|SMITH|JOHN|20050419", 
+      "to": "Event|2011-07-19T12:09:48|L094", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
+      "direction": "NONE", 
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "CUC|People|5577649730"
+    }, 
+    {
+      "id": "Port|ABC-Event|2011-07-19T12:09:48|L094", 
+      "uuid": "7d2c1d52f854436ab017e69bdb9777bd", 
+      "label": "processed at", 
+      "title": "processed at", 
+      "from": "Port|ABC", 
+      "to": "Event|2011-07-19T12:09:48|L094", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
+      "direction": "NONE", 
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "CUC|People|5577649730"
+    }, 
+    {
+      "id": "Port|ABC-Port|DEFG", 
+      "uuid": "81e82ae1610f4c728d22fb6e965f7fbb", 
+      "label": "located at", 
+      "title": "located at", 
+      "from": "Port|ABC", 
+      "to": "Port|DEFG", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
+      "direction": "NONE", 
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "CUC|People|5577649730"
+    }, 
+    {
+      "id": "Vehicle|LP-1234-Event|2011-07-19T12:09:48|L094", 
+      "uuid": "a55bc9874e474457933ecb295b0e513e", 
+      "label": "vehicle crossed", 
+      "title": "vehicle crossed", 
+      "from": "Vehicle|LP-1234", 
+      "to": "Event|2011-07-19T12:09:48|L094", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
+      "direction": "NONE", 
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "CUC|People|5577649730"
+    }, 
+    {
+      "id": "Person|SMITH|JOHN|20050419-Vehicle|LP-1234", 
+      "uuid": "c70592c0781d4f7c86ea831a7e452e9a", 
+      "label": "2011-07-19T12:09:48", 
+      "title": "2011-07-19T12:09:48", 
+      "from": "Person|SMITH|JOHN|20050419", 
+      "to": "Vehicle|LP-1234", 
+      "arrows": {"to": {"scaleFactor": "0.5"}}, 
+      "direction": "NONE", 
+      "font": {"align": "middle"}, 
+      "sourceAfiDocId": "CUC|People|5577649730"
     }
   ]
 }

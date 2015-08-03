@@ -41,9 +41,10 @@
 	</ul>
 
 <script id="hb-color-legend" type="text/x-handlebars-template">
+<script id="hb-color-legend" type="text/x-handlebars-template">
 <table id="dsColorTableId" class="table table-bordered" style="font-size: smaller">
     <thead>
-		<tr>
+		<tr style="background-color: wheat">
 		    <th>Data Source</th>
 		    <th>Color Name</th>
 		</tr>
@@ -59,6 +60,12 @@
 </table>
 </script>
 
+<script id="hb-entity-legend" type="text/x-handlebars-template">
+{{#each entityList}}
+	<span class="left"><img src="{{this.image}}" class="entityType" data-value="{{this.image}}" data-toggle="tooltip" data-placement="bottom" width="28" height="28" title="Select all {{this.type}}"></span>
+{{/each}}
+</script>
+
 <script id="hb-resolve-input" type="text/x-handlebars-template">
 <div id="resolveInputPanelId" title="Enter name for {{totalNodesSelected}} resolved object(s)">
 	<div class="col-md-12">
@@ -68,7 +75,7 @@
 </script>
 
 <script id="hb-properties-dialog" type="text/x-handlebars-template">
-<div id="{{dialogId}}" title="{{selectedNode.type}} Info">
+<div id="{{dialogId}}" title="{{selectedNode.id}} Info">
 	<table class="table table-striped table-bordered">
 	    <thead>
 			<tr>
@@ -119,8 +126,10 @@
 		{{/if}}
 		{{#if this.canCluster}}<li><a>Resolve</a></li>{{/if}}
 		{{#if this.canClusterExpand}}<li><a>Un-Resolve</a></li>{{/if}}
-		<li><a>Delete</a></li>
-		{{#if this.viewProperties}}<li><a>Properties</a></li>{{/if}}
+		<li><a>Remove From Graph</a></li>
+		{{#if this.viewProperties}}
+		<li><a>Properties</a></li>
+		{{/if}}
 	</ul>
 </script>
 
@@ -130,58 +139,71 @@
 	{{/each}}
 </script>
 
+<script id="hb-filter-query" type="text/x-handlebars-template">
+	<option value="">Data Source</option>
+	{{#each ds}}
+	<option value="{{this.id}}">{{this.name}}</option>
+	{{/each}}
+</script>
+
+<script id="hb-facets" type="text/x-handlebars-template">
+	{{#each facets}}
+	<option value="{{this.field}}">{{this.label}}</option>
+	{{/each}}
+</script>
 
 <div id="content" class="content">
 	<div id="manualSearch" class="row">
 		<div class="col-md-10">
-			<table>
-				<tr>
-					<td>
-						<form class="form-inline" style="display:inline" onsubmit="return false;">
-							<div class="form-group">
-								<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="50" type="text">
-							</div>
-							<div class="form-group laRows" title="# of rows">
-								<select id="laRows" class="form-control"></select>
-							</div>
-							<div class="form-group">
-								<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
-							</div>
-						</form>
-					</td>
-					<td>&nbsp;
-						<button id="optionsTrigger" class="btn btn-default fa fa-cog"> Options</button>
-						<ul id="optionsMenu">
-						    <li id="laClearBtn"><a data-icon="fa-file-o" href="#"> Clear</a></li>
-						    <li id="laColorBtn"><a data-icon="fa-paint-brush" href="#"> Colors</a></li>
-						    <li>
-						    	<a data-icon="fa-sitemap"> Layouts</a>
-						        <ul> 
-						            <li id="udBtn"><a data-icon="fa-arrow-down" href="#"> Up-Down</a></li>
-							    	<li id="duBtn"><a data-icon="fa-arrow-up" href="#"> Down-Up</a></li>
-							    	<li id="lrBtn"><a data-icon="fa-arrow-right" href="#"> Left-Right</a></li>
-							    	<li id="rlBtn"><a data-icon="fa-arrow-left" href="#"> Right-Left</a></li>
-							    	<li id="defaultLayoutBtn"><a data-icon="fa-arrows" href="#"> Default</a></li>
-						        </ul>
-						    </li>
-						    <li>
-						    	<a data-icon="fa-download"> i2 Export</a>
-						        <ul> 
-						            <li id="laI2ExportBtn"><a data-icon="fa-eye" href="#"> i2 Viewer</a></li>
-							    	<li id="laI2XmlExportBtn"><a data-icon="fa-file-code-o" href="#"> i2 iXv (XML)</a></li>
-						        </ul>
-						    </li>
-						</ul>
-					</td>
-				</tr>
-			</table>
+			<form class="form-inline" style="display:inline" onsubmit="return false;">
+				<div class="form-group">
+					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="40" type="text">
+				</div>
+				<div class="form-group" data-toggle="tooltip" title="Facets">
+					<select id="laFacet" class="form-control"></select>
+				</div>
+				<div class="form-group" data-toggle="tooltip" title="Filters">
+					<select id="laFilterQuery" class="form-control"></select>
+				</div>
+				<div class="form-group" data-toggle="tooltip" title="# of rows">
+					<select id="laRows" class="form-control"></select>
+				</div>
+				<div class="form-group">
+					<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
+				</div>
+			</form>
+			<button id="optionsTrigger" class="btn btn-default fa fa-cog"> Options</button>
+			<ul id="optionsMenu">
+			    <li id="laClearBtn"><a data-icon="fa-file-o" href="#"> Clear</a></li>
+			    <li id="laColorBtn"><a data-icon="fa-paint-brush" href="#"> Colors</a></li>
+			    <li>
+			    	<a data-icon="fa-sitemap"> Layouts</a>
+			        <ul> 
+			            <li id="udBtn"><a data-icon="fa-arrow-down" href="#"> Up-Down</a></li>
+				    	<li id="duBtn"><a data-icon="fa-arrow-up" href="#"> Down-Up</a></li>
+				    	<li id="lrBtn"><a data-icon="fa-arrow-right" href="#"> Left-Right</a></li>
+				    	<li id="rlBtn"><a data-icon="fa-arrow-left" href="#"> Right-Left</a></li>
+				    	<li id="defaultLayoutBtn"><a data-icon="fa-arrows" href="#"> Default</a></li>
+			        </ul>
+			    </li>
+			    <li>
+			    	<a data-icon="fa-download"> i2 Export</a>
+			        <ul> 
+			            <li id="laI2ExportBtn"><a data-icon="fa-eye" href="#"> i2 Viewer</a></li>
+				    	<li id="laI2XmlExportBtn"><a data-icon="fa-file-code-o" href="#"> i2 iXv (XML)</a></li>
+			        </ul>
+			    </li>
+			</ul>
 		</div>
 		<div class="col-md-2 text-right">
-			<span class="selectDraw" title="Move or highlight by dragging mouse">
+			<span data-toggle="tooltip" title="Move or highlight by dragging mouse">
 				<input id="highLightId" data-toggle="toggle" data-on="Highlight" data-off="Move View" data-size="small" type="checkbox">
 			</span>
-			<input id="stretchId" title="Line size" type="text" maxlength="4" size="4"/>
+			<input id="stretchId" data-toggle="tooltip" title="Line size" type="text" maxlength="4" size="4"/>
 		</div>	
+		<div class="col-md-12 text-right">
+			<div id="entityLegendPanelId" style="background-color: whitesmoke;border-bottom: 1px solid #ccc;"></div>
+		</div>
 	</div>
 	
 	<div id="network"/>
@@ -191,14 +213,14 @@
 
 <div id="i2NoticeId" title="Notice!" style="display: none">
     <p>i2 Viewer only support 32-Bit Java JRE. If you do not have it, please use the 'i2 iXv (XML)' 
-    option instead to manually download and import you data.</p>
+    option to manually download and import you data.</p>
 </div>
 
 <div id="i2DisabledId" title="Notice!" style="display: none">
-    <p>Export to i2 is disabled after subsequent any search!</p>
+    <p>Export to i2 is disabled after any subsequent search!</p>
 </div>
 
-<div id="colorLegendId" title="Data Source Colors">
+<div id="colorLegendId" title="Data Source Colors" style="display: none">
 	<div id="colorLegendPanelId"></div>
 </div>
 
