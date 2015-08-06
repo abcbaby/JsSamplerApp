@@ -3,12 +3,15 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <title>Upload</title>
-<!-- production -->
+<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/themes/base/jquery-ui.css" type="text/css" />
+<link rel="stylesheet" href="../js/plupload/jquery.ui.plupload/css/jquery.ui.plupload.css" type="text/css" />
+
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="http://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+
+<!-- production -->
 <script type="text/javascript" src="../js/plupload/plupload.full.min.js"></script>
-<script type="text/javascript" src="../js/plupload/moxie.js"></script>
-<script type="text/javascript" src="../js/plupload/plupload.dev.js"></script>
-<script type="text/javascript" src="http://www.plupload.com/plupload/js/jquery.ui.plupload/jquery.ui.plupload.min.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../js/plupload/jquery.ui.plupload/jquery.ui.plupload.js"></script>
 </head>
 <body style="font: 13px Verdana; background: #eee; color: #333">
 <!-- Instantiating: -->
@@ -22,10 +25,10 @@ $(function() {
     $("#uploader").plupload({
         // General settings
         runtimes : 'html5,flash,silverlight,html4',
-        url : "/examples/upload",
+        url : "/servlet/chunkUpload",
  
         // Maximum file size
-        max_file_size : '2mb',
+        //max_file_size : '2mb',
  
         chunk_size: '1mb',
  
