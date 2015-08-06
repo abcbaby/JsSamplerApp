@@ -65,6 +65,15 @@
     <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
+  <servlet>
+    <servlet-name>Chunk Upload Servlet</servlet-name>
+    <servlet-class>com.dragonzone.upload.ChunkUploadServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Chunk Upload Servlet</servlet-name>
+    <url-pattern>/servlet/chunkUpload</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>mvc-dispatcher</servlet-name>
     <url-pattern>/</url-pattern>
