@@ -25,6 +25,7 @@
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </logger>
+    <logger name="com.dragonzone.upload" level="debug"/>
     <logger name="org.springframework" level="warn"/>
     <logger name="javax.faces" level="info"/>
     <!-- By default, the level of the root level is set to DEBUG -->

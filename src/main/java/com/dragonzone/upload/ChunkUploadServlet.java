@@ -1,7 +1,9 @@
 package com.dragonzone.upload;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +19,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +41,14 @@ public class ChunkUploadServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		logger.debug("In doGet");
-		doPost(req, resp);
+		if (req.getParameter("filename") == null) {
+			logger.warn("You need to specify a filename.");
+		} else {
+			String filename = (String) req.getParameter("filename");
+			File dstFile = new File(FileDir);
+			File uploadedFile = new File(dstFile.getPath() + "/" + filename);
+			buildChunks(uploadedFile);
+		}
 	}
 	
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -52,24 +62,24 @@ public class ChunkUploadServlet extends HttpServlet {
 				FileItemIterator iter = upload.getItemIterator(req);
 				while (iter.hasNext()) {
 					FileItemStream item = iter.next();
-					InputStream input = item.openStream();
+					InputStream in = item.openStream();
 					// Handle a form field.
 					if (item.isFormField()) {
-						String fileName = item.getFieldName();
-						String value = Streams.asString(input);
-						if ("name".equals(fileName)) {
+						String fieldName = item.getFieldName();
+						String value = Streams.asString(in);
+						if ("name".equals(fieldName)) {
 							this.name = value;
 							logger.debug("name: " + name);
-						} else if ("chunks".equals(fileName)) {
+						} else if ("chunks".equals(fieldName)) {
 							this.chunks = Integer.parseInt(value);
 							logger.debug("chunks:" + chunks);
-						} else if ("chunk".equals(fileName)) {
+						} else if ("chunk".equals(fieldName)) {
 							this.chunk = Integer.parseInt(value);
 							logger.debug("chunk: " + chunk);
-						} else if ("user".equals(fileName)) {
+						} else if ("user".equals(fieldName)) {
 							this.user = value;
 							logger.debug("user: " + user);
-						} else if ("time".equals(fileName)) {
+						} else if ("time".equals(fieldName)) {
 							this.time = value;
 							logger.debug("time: " + time);
 						}
@@ -79,9 +89,13 @@ public class ChunkUploadServlet extends HttpServlet {
 							dstFile.mkdirs();
 						}
 
-						File dst = new File(dstFile.getPath() + "/" + this.name);
+						//File dst = new File(dstFile.getPath() + "/" + this.name); // upload and create only 1 file
+						File dst = new File(dstFile.getPath() + "/" + this.name + "." + chunk); // create each upload separately and use get to build as 1 file
 
-						saveUploadFile(input, dst);
+						//saveUploadFile(input, dst);
+						try (OutputStream out = new BufferedOutputStream(new FileOutputStream(dst, dst.exists()), BUF_SIZE)) {
+							IOUtils.copy(in, out);
+						}	
 					}
 				}
 			} catch (Exception e) {
@@ -102,37 +116,21 @@ public class ChunkUploadServlet extends HttpServlet {
 		output.write(responseBytes);
 		output.flush();
 	}
+	
+	public void buildChunks(File uploadedFile) throws IOException {
+		File dstFile = new File(FileDir);
+		
+		int chunk = 0;
+		File srcFile = new File(dstFile.getPath() + "/" + uploadedFile.getName() + "." + chunk++);
 
-	private void saveUploadFile(InputStream input, File dst) throws IOException {
-		OutputStream out = null;
-		try {
-			if (dst.exists()) {
-				out = new BufferedOutputStream(new FileOutputStream(dst, true), BUF_SIZE);
-			} else {
-				out = new BufferedOutputStream(new FileOutputStream(dst), BUF_SIZE);
-			}
-			byte[] buffer = new byte[BUF_SIZE];
-			int len = 0;
-			while ((len = input.read(buffer)) > 0) {
-				out.write(buffer, 0, len);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (null != input) {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (null != out) {
-				try {
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+		while (srcFile.exists()) {
+			
+			try (OutputStream out = new BufferedOutputStream(new FileOutputStream(uploadedFile, true), BUF_SIZE);
+				 BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcFile))) {
+				IOUtils.copy(in, out);
+			}	
+			
+			srcFile = new File(dstFile.getPath() + "/" + uploadedFile.getName() + "." + chunk++);
 		}
 	}
 }
