@@ -69,19 +69,19 @@ public class ChunkUploadServlet extends HttpServlet {
 						String value = Streams.asString(in);
 						if ("name".equals(fieldName)) {
 							this.name = value;
-							logger.debug("name: " + name);
+							logger.debug("name: {}", name);
 						} else if ("chunks".equals(fieldName)) {
 							this.chunks = Integer.parseInt(value);
-							logger.debug("chunks:" + chunks);
+							logger.debug("chunks: {}", chunks);
 						} else if ("chunk".equals(fieldName)) {
 							this.chunk = Integer.parseInt(value);
-							logger.debug("chunk: " + chunk);
+							logger.debug("chunk: {}", chunk);
 						} else if ("user".equals(fieldName)) {
 							this.user = value;
-							logger.debug("user: " + user);
+							logger.debug("user: {}", user);
 						} else if ("time".equals(fieldName)) {
 							this.time = value;
-							logger.debug("time: " + time);
+							logger.debug("time: {}", time);
 						}
 					} else { // Handle a multi-part MIME encoded file.
 						File dstFile = new File(FileDir);
@@ -92,10 +92,15 @@ public class ChunkUploadServlet extends HttpServlet {
 						//File dst = new File(dstFile.getPath() + "/" + this.name); // upload and create only 1 file
 						File dst = new File(dstFile.getPath() + "/" + this.name + "." + chunk); // create each upload separately and use get to build as 1 file
 
-						//saveUploadFile(input, dst);
-						try (OutputStream out = new BufferedOutputStream(new FileOutputStream(dst, dst.exists()), BUF_SIZE)) {
-							IOUtils.copy(in, out);
-						}	
+						try {
+							try (OutputStream out = new BufferedOutputStream(new FileOutputStream(dst, dst.exists()), BUF_SIZE)) {
+								IOUtils.copy(in, out);
+							}	
+						} catch (Exception e) {
+							// user may have aborted upload, so delete this chunk
+							dst.delete();
+							logger.error("Error trying to creating this chunk, deleting chunk file: {}", dst.getAbsoluteFile());
+						}
 					}
 				}
 			} catch (Exception e) {
@@ -117,7 +122,7 @@ public class ChunkUploadServlet extends HttpServlet {
 		output.flush();
 	}
 	
-	public void buildChunks(File uploadedFile) throws IOException {
+	private void buildChunks(File uploadedFile) throws IOException {
 		File dstFile = new File(FileDir);
 		
 		int chunk = 0;

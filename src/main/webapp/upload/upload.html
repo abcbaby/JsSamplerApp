@@ -16,7 +16,7 @@
 <body style="font: 13px Verdana; background: #eee; color: #333">
 <!-- Instantiating: -->
 <div id="uploader">
-    <p>Your browser doesn't have Flash, Silverlight or HTML5 support.</p>
+    <p>Your browser doesn't have Silverlight or HTML5 support.</p>
 </div>
  
 <script type="text/javascript">
@@ -24,7 +24,7 @@
 $(function() {
     $("#uploader").plupload({
         // General settings
-        runtimes : 'html5,flash,silverlight,html4',
+        runtimes : 'html5,silverlight,html4',
         url : "/servlet/chunkUpload",
  
         // Maximum file size
@@ -63,7 +63,7 @@ $(function() {
         },
  
         // Flash settings
-        flash_swf_url : '/plupload/js/Moxie.swf',
+        //flash_swf_url : '/plupload/js/Moxie.swf',
      
         // Silverlight settings
         silverlight_xap_url : '/plupload/js/Moxie.xap'

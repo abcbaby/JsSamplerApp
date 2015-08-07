@@ -70,6 +70,15 @@
     <servlet-class>com.dragonzone.upload.ChunkUploadServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
+  <servlet>
+    <servlet-name>jQuery Chunk Upload Servlet</servlet-name>
+    <servlet-class>com.dragonzone.upload.JQueryChunkUploadServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>jQuery Chunk Upload Servlet</servlet-name>
+    <url-pattern>/servlet/jQueryChunkUpload</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>Chunk Upload Servlet</servlet-name>
     <url-pattern>/servlet/chunkUpload</url-pattern>
