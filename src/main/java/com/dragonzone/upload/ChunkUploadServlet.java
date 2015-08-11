@@ -82,6 +82,8 @@ public class ChunkUploadServlet extends HttpServlet {
 						} else if ("time".equals(fieldName)) {
 							this.time = value;
 							logger.debug("time: {}", time);
+						} else if ("id".equals(fieldName)) {
+							logger.debug("id: {}", value);
 						}
 					} else { // Handle a multi-part MIME encoded file.
 						File dstFile = new File(FileDir);
@@ -97,9 +99,8 @@ public class ChunkUploadServlet extends HttpServlet {
 								IOUtils.copy(in, out);
 							}	
 						} catch (Exception e) {
-							// user may have aborted upload, so delete this chunk
 							dst.delete();
-							logger.error("Error trying to creating this chunk, deleting chunk file: {}", dst.getAbsoluteFile());
+							logger.error("User may have aborted upload, so delete this chunk, file: {}", dst.getAbsoluteFile());
 						}
 					}
 				}

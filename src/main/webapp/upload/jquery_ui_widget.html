@@ -5,16 +5,24 @@
 
 <title>Plupload - jQuery UI Widget</title>
 
-<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/themes/base/jquery-ui.css" type="text/css" />
+<link href="http://rawgithub.com/moxiecode/plupload/master/js/jquery.plupload.queue/css/jquery.plupload.queue.css" type="text/css" rel="stylesheet" media="screen">
+<link rel="stylesheet" href="../js/jquery-ui/jquery-ui.css" type="text/css" />
 <link rel="stylesheet" href="../js/plupload/jquery.ui.plupload/css/jquery.ui.plupload.css" type="text/css" />
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script src="http://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
+<script src="../js/jquery-ui/jquery-ui.min.js"></script>
 
 <!-- production -->
 <script type="text/javascript" src="../js/plupload/plupload.full.min.js"></script>
 <script type="text/javascript" src="../js/plupload/jquery.ui.plupload/jquery.ui.plupload.js"></script>
+<script src="http://rawgithub.com/moxiecode/plupload/master/js/jquery.plupload.queue/jquery.plupload.queue.min.js" type="text/javascript"></script>
 
+<style>
+/* HIDE THE PLUPLOAD UPLOAD BUTTON, SINCE WE WILL USE OUR OWN UPLOAD BUTTON */
+.plupload_start {
+	display: none !important;
+}
+</style>
 </head>
 <body style="font: 13px Verdana; background: #eee; color: #333">
 
@@ -22,6 +30,12 @@
 
 <p>You can see this example with different themes on the <a href="http://plupload.com/example_jquery_ui.php">www.plupload.com</a> website.</p>
 
+<form>
+	ID NAME: <input type="text" id="userId"/><br/>
+	<input type="button" id="submitAllId" value="Upload"/>&nbsp;
+	<input type="button" id="pauseId" value="Pause"/>
+	
+</form>
 <div id="uploader">
 	<p>Your browser doesn't have Silverlight or HTML5 support.</p>
 </div>
@@ -29,7 +43,9 @@
 <script type="text/javascript">
 // Initialize the widget when the DOM is ready
 $(function() {
-	$("#uploader").plupload({
+	var totalFileUploaded = 0;
+	
+	$("#uploader").pluploadQueue({
 		// General settings
 		runtimes : 'html5,silverlight,html4',
 		url : "/servlet/chunkUpload",
@@ -70,8 +86,58 @@ $(function() {
 		},
 	
 		// Silverlight settings
-		silverlight_xap_url : '/plupload/js/Moxie.xap'
+		silverlight_xap_url : '/plupload/js/Moxie.xap',
+		
+		init: {
+			BeforeUpload: function(up, file) {
+				var ok = true;
+				if ($('#userId').val() == '') {
+					alert('ID Name cannot be empty!');
+					up.stop();
+					ok = false;
+				} else {
+			        up.settings.multipart_params = {id: $('#userId').val()};
+				}
+				return ok;
+		    },
+		    FilesAdded: function(up, files) {
+		    	totalFileUploaded++;
+            },
+            FilesRemoved: function(up, files) {
+            	totalFileUploaded--;
+            },
+		    UploadComplete: function(up, file) {
+		    	alert("All files uploaded, close dialog");
+		    }
+		}
+		
 	});
+	
+	var uploader = $('#uploader').pluploadQueue();
+/*	
+	uploader.bind('BeforeUpload', function(up, file) {
+		var ok = true;
+		if ($('#userId').val() == '') {
+			alert('ID Name cannot be empty!');
+			up.stop();
+			ok = false;
+		} else {
+	        up.settings.multipart_params = {id: $('#userId').val()};
+		}
+		return ok;
+    });
+ */	
+	$("#submitAllId").click(function() {
+		if (totalFileUploaded === 0) {
+			alert("A file must be selected first.");
+		} else {
+			uploader.start();
+		}
+	});
+	$("#pauseId").click(function() {
+		uploader.stop();
+	});
+	
 });
 </script>
 </body>
