@@ -8,6 +8,42 @@ var LinkAnalysisModel = Backbone.Model.extend({
     },    
 });
 
+var LinkAnalysisSeeAlsoView = Backbone.View.extend({
+	el : "#seeAlsoId",
+	bootBoxModal: null,
+	initialize: function(bootBoxModal){
+		this.bootBoxModal = bootBoxModal;
+	},
+	events : {
+		'mouseover .bySeeAlso' : 'hoverSeeAlso',
+		'click .bySeeAlso' : 'selectSeeAlso'
+	},
+	selectSeeAlso: function(event) {
+		var query = $(event.currentTarget).data('see-also-query');
+		var rows = $('#laRows').val();
+		
+		var postData = {
+			"query": query,
+		    "start": 0,
+		    "rows": rows,
+		    "matchAll": true,
+		    "newSearch": true
+		};
+		if ($("#laFilterQuery").val()) {
+			postData.filterQuery = { "AFI__DOC_TYPE_t": [ $("#laFilterQuery").val() ] };
+		}
+		if ($("#laFacet").val()) {
+			postData.facet = true;
+			postData.facetMethod = "fc";
+			postData.facetField = $("#laFacet").val();
+		}
+		ALERT.info("Retrieving " + rows + " document(s) with query, " + query, linkAnalysisVar.statusTimeout);
+		search(postData);
+		
+		this.bootBoxModal.modal('hide');
+	}
+});
+
 var LinkAnalysisDataSourceColorView = Backbone.View.extend({
 	el : $("#colorLegendPanelId"),
 	events : {
@@ -15,14 +51,14 @@ var LinkAnalysisDataSourceColorView = Backbone.View.extend({
 	},
 	highLightByDS: function(event) {
 		var dsId = $(event.currentTarget).data('ds-id');
-		var nodesWithDS = nodes.get({
+		var nodesWithDS = linkAnalysisVar.nodes.get({
 		    filter: function (item) {
-		    	if (network.isCluster(item.id)) {
+		    	if (linkAnalysisVar.network.isCluster(item.id)) {
 		    		return false;
 		    	} else {
-					var ds = getDataSourceName(item['sourceAfiDocId']);
+					var ds = getDataSourceName(item[linkAnalysisVar.docId]);
 					// only return node w/ same DS and NOT in cluster
-			    	return ds == dsId && (_.isUndefined(item[resolveNameId]) || item[resolveNameId] == '');
+			    	return ds == dsId && (_.isUndefined(item[linkAnalysisVar.resolveNameId]) || item[linkAnalysisVar.resolveNameId] == '');
 		    	}
 		    }
 		});
@@ -30,133 +66,42 @@ var LinkAnalysisDataSourceColorView = Backbone.View.extend({
 		_.each(nodesWithDS, function(item) {
 			nodeIds.push(item.id);
 		})
-		network.selectNodes(nodeIds);
+		linkAnalysisVar.network.selectNodes(nodeIds);
 	}
 });
 
 var LinkAnalysisView = Backbone.View.extend({
 	el : $("#manualSearch"),
 	initialize: function(){
+		$('.selectable').hover(function() {
+			$(this).css('background-color', linkAnalysisVar.hoverColor);
+		}, function(){
+			$(this).css('background-color', linkAnalysisVar.deselectedColor);
+		});
+		$('.highlighting').hover(function() {
+			$(this).css('background-color', linkAnalysisVar.hoverColor);
+		}, function(){
+			$(this).css('background-color', linkAnalysisVar.highlighting ? linkAnalysisVar.selectedColor: linkAnalysisVar.deselectedColor);
+		});
+		$('.freezing').hover(function() {
+			$(this).css('background-color', linkAnalysisVar.hoverColor);
+		}, function(){
+			$(this).css('background-color', linkAnalysisVar.freeze ? linkAnalysisVar.selectedColor: linkAnalysisVar.deselectedColor);
+		});
 		this.render();
 	},
 	events : {
-		'click #laSearchBtn' : 'search',
-		'mouseover .entityType' : 'mouseoverEntity',
-		'mouseout .entityType' : 'mouseoutEntity',
-		'click .entityType' : 'selectEntity'
-	},
-	mouseoverEntity: function(e) {
-		$(e.currentTarget).css({
-			'background-color': '#00FF00',
-		});
-	},
-	mouseoutEntity: function(e) {
-		$(e.currentTarget).css({
-			'background-color': 'transparent',
-		});
-	},
-	selectEntity: function(e) {
-		var entityValue = $(e.currentTarget).data('value');
-		var selectedNodes = e.ctrlKey ? network.getSelectedNodes() : [];
-		var nodesWithEntity = nodes.get({
-			filter: function (item) {
-				return (item.image === entityValue 
-						&& (!item['cluster'] || item['cluster'] === false));
-			}
-		});
-		
-		_.forEach(nodesWithEntity, function(item) {
-			if (!item[resolveNameId] || item[resolveNameId] === '') {
-				selectedNodes.push(item.id);
-			}
-		});
-		
-		network.selectNodes(selectedNodes);
-		ALERT.info(selectedNodes.length + " item(s) selected.", statusTimeout);
-	},
-	search: function() {
-		var qry = this.$el.find('#laSearchTxt').val().trim();
-		if (qry == '') {
-			ALERT.info("Please enter a search", statusTimeout);
-		} else {
-			this.model.set('query', qry); 
-			this.model.set('rows', this.$el.find('#laRows').val()); 
-			var postData = {
-					"query": this.model.get('query'),
-					"start": this.model.get('start'),
-					"rows": this.model.get('rows'),
-					"matchAll": true,
-					"newSearch": true
-			};
-			if ($("#laFilterQuery").val() || this.model.get("filterQuery") !== '') {
-				postData.filterQuery = { "AFI__DOC_TYPE_t": 
-					[ $("#laFilterQuery").val() ? $("#laFilterQuery").val() : this.model.get("filterQuery") ] 
-				};
-			}
-			if ($("#laFacet").val()) {
-				postData.facet = true;
-				postData.facetMethod = "fc";
-				postData.facetField = $("#laFacet").val();
-			}
-			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'), statusTimeout);
-			search(postData);
-		}
-	},
-	render : function () {
-		//this.$el.find('#laSearchTxt').val(decodeURI(this.model.get('query')));
-		$('#laSearchTxt').val('test');
-		
-		var theTemplateScript = $("#hb-rows").html();
-		var theTemplate = Handlebars.compile(theTemplateScript);
-		var availableRows = [1, 5, 10, 15, 20];
-		if (_.indexOf(availableRows, parseInt(this.model.get('rows'))) == -1) {
-			availableRows.push(this.model.get('rows'));
-		}
-		var content  = { rows : availableRows };
-		var compiledHtml = theTemplate(content);
-		
-		this.$el.find('#laRows').html(compiledHtml);
-		$('div.laRows select').val(this.model.get('rows'));
-	}
-});
-
-var LinkAnalysisOptionsView = Backbone.View.extend({
-	el : $("#optionsMenu"),
-	events : {
-		'click #laClearBtn' : 'clear',
 		'click #laColorBtn' : 'colorLegend',
 		'click #laI2ExportBtn' : 'i2Export',
 		'click #laI2XmlExportBtn' : 'i2XmlExport',
-		'click #udBtn' : 'layoutUd',
-		'click #duBtn' : 'layoutDu',
-		'click #lrBtn' : 'layoutLr',
-		'click #rlBtn' : 'layoutRl',
-		'click #defaultLayoutBtn' : 'defaultLayout'
-	},
-	layoutUd: function() {
-		customLayout = { hierarchical: { direction: "UD", levelSeparation: 150 } };
-		refresh();
-		hideOptions();
-	},
-	layoutDu: function() {
-		customLayout = { hierarchical: { direction: "DU", levelSeparation: 150 } };
-		refresh();
-		hideOptions();
-	},
-	layoutLr: function() {
-		customLayout = { hierarchical: { direction: "LR", levelSeparation: 150 } };
-		refresh();
-		hideOptions();
-	},
-	layoutRl: function() {
-		customLayout = { hierarchical: { direction: "RL", levelSeparation: 150 } };
-		refresh();
-		hideOptions();
-	},
-	defaultLayout: function() {
-		customLayout = {};
-		refresh();
-		hideOptions();
+		'click #laClearBtn' : 'clear',
+		'click #laSearchBtn' : 'search',
+		'click .highlighting' : 'highlightClick',
+		'click .freezing' : 'freezeClick',
+		'mouseover .heirarchy' : 'heirarchyHover',
+		'click .heirarchy' : 'heirarchyClick',
+		'click .stretching' : 'stretchClick',
+		'click .entityType' : 'selectEntity'
 	},
 	colorLegend: function() {
 		updateColorLegend();
@@ -172,68 +117,170 @@ var LinkAnalysisOptionsView = Backbone.View.extend({
 	        modal: false
 	    });
 		$('#colorLegendId').puidialog('show');
-		hideOptions();
-	},
-	clear: function() {
-		initDraw();		
-		updateColorLegend();
-		hideOptions();
 	},
 	i2Export: function() {
-		if (i2Disabled) {
-			$('#i2DisabledId').puidialog({
-		        resizable: false,
-		        minimizable: false,
-		        maximizable: false,
-		        draggable: false,
-		        responsive: true,
-		        modal: true
-		    });
-			$('#i2DisabledId').puidialog('show');
+		if (linkAnalysisVar.i2Disabled) {
+			bootbox.dialog({
+				title: "Notice!",
+				message: "Export to i2 is disabled after any subsequent search!"
+			});
 		} else {
-			$('#i2NoticeId').puidialog({
-		        resizable: false,
-		        minimizable: false,
-		        maximizable: false,
-		        draggable: false,
-		        responsive: true,
-		        modal: true,
-		        buttons: [{
-	                text: 'OK',
-	                icon: 'fa-check',
-	                click: function() {
-	                    $('#i2NoticeId').puidialog('hide');
-	            		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-	            		window.location.href = "/search/api/linkanalysis/i2export.jnlp?search=" + getUrlVars().origin;
-	                }
-	            }]
-		    });
-			$('#i2NoticeId').puidialog('show');
+			bootbox.dialog({
+				title: "Notice!",
+				message: "i2 Viewer only support 32-Bit Java JRE. If you do not have it, please use the 'i2 iXv (XML)' option to manually download and import you data.",
+				buttons: {
+					main: {
+						label: "OK",
+						className: "btn-primary",
+						callback: function() {
+		            		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
+		            		window.location.href = "/search/api/linkanalysis/i2export.jnlp?search=" + getUrlVars().origin;
+		            	}
+					}
+				}
+			});
 		}
-		hideOptions();
 	},
 	i2XmlExport: function() {
-		if (i2Disabled) {
-			$('#i2DisabledId').puidialog({
-		        resizable: false,
-		        minimizable: false,
-		        maximizable: false,
-		        draggable: false,
-		        responsive: true,
-		        modal: true
-		    });
-			$('#i2DisabledId').puidialog('show');
+		if (linkAnalysisVar.i2Disabled) {
+			bootbox.dialog({
+				title: "Notice!",
+				message: "Export to i2 is disabled after any subsequent search!"
+			});
 		} else {
 			var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
 			window.location.href = "/search/api/linkanalysis/i2download?search=" + getUrlVars().origin;
 		}
-		hideOptions();
+	},
+	clear: function() {
+		initDraw();		
+		updateColorLegend();
+		linkAnalysisVar.entityList = [];
+		updateEntityLegend();
+	},
+	highlightClick: function(e) {
+		linkAnalysisVar.highlighting = !linkAnalysisVar.highlighting;
+		$(e.currentTarget).css({
+			'background-color': linkAnalysisVar.highlighting ? linkAnalysisVar.selectedColor : linkAnalysisVar.deselectedColor
+		});
+		linkAnalysisVar.network.setOptions({
+			interaction: { 
+				dragView: !linkAnalysisVar.highlighting, 
+				dragNodes: !linkAnalysisVar.highlighting,
+				hideEdgesOnDrag: !linkAnalysisVar.highlighting
+			}
+		});
+	},
+	freezeClick: function(e) {
+		linkAnalysisVar.freeze = !linkAnalysisVar.freeze;
+		$(e.currentTarget).css({
+			'background-color': linkAnalysisVar.freeze ? linkAnalysisVar.selectedColor : linkAnalysisVar.deselectedColor
+		});
+		linkAnalysisVar.network.setOptions({
+			physics: {
+				enabled: !linkAnalysisVar.freeze
+			}
+		});
+	},
+	heirarchyHover: function(e) {
+		var curValue = $(e.currentTarget).data('value');
+		$(e.currentTarget).hover(function() {
+			$(this).css('background-color', linkAnalysisVar.hoverColor);
+		}, function(){
+			$(this).css('background-color', curValue === linkAnalysisVar.heirarchy ? linkAnalysisVar.selectedColor: linkAnalysisVar.deselectedColor);
+		});
+	},
+	heirarchyClick: function(e) {
+		linkAnalysisVar.heirarchy = $(e.currentTarget).data('value');
+		$(e.currentTarget).css({
+			'background-color': linkAnalysisVar.selectedColor
+		});
+		$(e.currentTarget).siblings().css({
+			'background-color': linkAnalysisVar.deselectedColor
+		});
+		if (linkAnalysisVar.heirarchy === $(".layoutDefault").data('value')) {
+			linkAnalysisVar.customLayout = {};
+		} else {
+			linkAnalysisVar.customLayout = { hierarchical: { direction: linkAnalysisVar.heirarchy, levelSeparation: 150 } };
+		}
+		refresh();
+	},
+	stretchClick: function(e) {
+		var stretchValue = $(e.currentTarget).data('value');
+		linkAnalysisVar.edgeLength = stretchValue === "EXPAND" 
+			? (linkAnalysisVar.edgeLength + linkAnalysisVar.edgeStep)
+			: (linkAnalysisVar.edgeLength - linkAnalysisVar.edgeStep);
+		if (linkAnalysisVar.edgeLength >= linkAnalysisVar.minEdgeLength && linkAnalysisVar.edgeLength <= linkAnalysisVar.maxEdgeLength) {
+			linkAnalysisVar.network.setOptions({edges: {length: linkAnalysisVar.edgeLength}});
+		} else {
+			ALERT.warning("Cannot " + stretchValue.toLowerCase() + " any further.", linkAnalysisVar.statusTimeout);
+		}
+	},
+	selectEntity: function(e) {
+		var entityValue = $(e.currentTarget).data('value');
+		var selectedNodes = e.ctrlKey ? linkAnalysisVar.network.getSelectedNodes() : [];
+		var nodesWithEntity = linkAnalysisVar.nodes.get({
+			filter: function (item) {
+				return (item.image === entityValue 
+						&& (!item['cluster'] || item['cluster'] === false));
+			}
+		});
+		
+		_.forEach(nodesWithEntity, function(item) {
+			if (!item[linkAnalysisVar.resolveNameId] || item[linkAnalysisVar.resolveNameId] === '') {
+				selectedNodes.push(item.id);
+			}
+		});
+		
+		linkAnalysisVar.network.selectNodes(selectedNodes);
+		ALERT.info(selectedNodes.length + " item(s) selected.", linkAnalysisVar.statusTimeout);
+	},
+	search: function() {
+		//var qry = this.$el.find('#laSearchTxt').val().trim();
+		var qry = "test";
+		if (qry == '') {
+			ALERT.info("Please enter a search", linkAnalysisVar.statusTimeout);
+		} else {
+			this.model.set('query', qry); 
+			this.model.set('rows', this.$el.find('#laRows').val()); 
+			var postData = {
+					"query": this.model.get('query'),
+					"start": this.model.get('start'),
+					"rows": this.model.get('rows'),
+					"matchAll": true,
+					"newSearch": true
+			};
+			if ($("#laFilterQuery").val() || this.model.get("filterQuery") !== '') {
+				postData.filterQuery = {};
+				postData.filterQuery[$("#laFacet").val()] = [$("#laFilterQuery").val() 
+					? $("#laFilterQuery").val() 
+					: this.model.get("filterQuery")];
+			}
+			if ($("#laFacet").val()) {
+				postData.facet = true;
+				postData.facetMethod = "fc";
+				postData.facetField = $("#laFacet").val();
+			}
+			ALERT.info("Retrieving " + this.model.get('rows') + " document(s) with query, " + this.model.get('query'), linkAnalysisVar.statusTimeout);
+			search(postData);
+		}
+	},
+	render : function () {
+		this.$el.find('#laSearchTxt').val(decodeURI(this.model.get('query')));
+		
+		var theTemplateScript = $("#hb-rows").html();
+		var theTemplate = Handlebars.compile(theTemplateScript);
+		var availableRows = [1, 5, 10, 15, 20];
+		if (_.indexOf(availableRows, parseInt(this.model.get('rows'))) == -1) {
+			availableRows.push(this.model.get('rows'));
+		}
+		var content  = { rows : availableRows };
+		var compiledHtml = theTemplate(content);
+		
+		this.$el.find('#laRows').html(compiledHtml);
+		$('#laRows').val(this.model.get('rows'));
 	}
 });
-
-function hideOptions() {
-	$('#optionsMenu').puitieredmenu('hide');
-}
 
 // Read a page's GET URL variables and return them as an associative array.
 function getUrlVars() {
@@ -268,6 +315,7 @@ function loadJson(url) {
 }
 
 function search(postData) {
+	postData.maxRowsOverride = true; // lift default max row restriction
 	$.ajax({
 		type : "POST",
 		url : "/search/api/linkanalysis/documents",
@@ -279,8 +327,8 @@ function search(postData) {
 			ALERT.status("Loading...");
 		},
 		error: function() {
-			var jsonData = loadAlready ? loadJson("/network/addedData.json") : loadJson("/network/data.json");
-			loadAlready = true;
+			var jsonData = linkAnalysisVar.loadAlready ? loadJson("/network/addedData.json") : loadJson("/network/data.json");
+			linkAnalysisVar.loadAlready = true;
 			syncNetwork(jsonData);
 		},
 		success : function(jsonData) {
@@ -288,7 +336,7 @@ function search(postData) {
 		}
 	});
 	ALERT.clearStatus();
-	i2Disabled = true;
+	linkAnalysisVar.i2Disabled = true;
 }
 
 function syncNetwork(jsonData) {
@@ -296,12 +344,12 @@ function syncNetwork(jsonData) {
 	var newEdges = [];
 	// don't bring in nodes/edges that has already been removed by user
 	_.each(jsonData.nodes, function(it) {
-		if (nodesDeleted.get(it.id) == null) {
+		if (linkAnalysisVar.nodesDeleted.get(it.id) == null) {
 			newNodes.push(it);
 		}
 	})
 	_.each(jsonData.edges, function(it) {
-		if (edgesDeleted.get(it.id) == null) {
+		if (linkAnalysisVar.edgesDeleted.get(it.id) == null) {
 			newEdges.push(it);
 		}
 	})
@@ -310,12 +358,12 @@ function syncNetwork(jsonData) {
 	var newEdges2 = [];
 	// don't bring in nodes/edges that already exists
 	_.each(newNodes, function(it) {
-		if (nodes.get(it.id) == null) {
+		if (linkAnalysisVar.nodes.get(it.id) == null) {
 			newNodes2.push(it);
 		}
 	})
 	_.each(newEdges, function(it) {
-		if (edges.get(it.id) == null) {
+		if (linkAnalysisVar.edges.get(it.id) == null) {
 			newEdges2.push(it);
 		}
 	})
@@ -324,24 +372,24 @@ function syncNetwork(jsonData) {
 		if (!_.isEmpty(newNodes2)) {
 			// add unique entities to display in legend
 			_.forEach(newNodes2, function(item) {
-				var foundEntity = _.find(entityList, function(it) {
+				var foundEntity = _.find(linkAnalysisVar.entityList, function(it) {
 					return it["image"] === item["image"];
 				});
 				
 				if (_.isUndefined(foundEntity)) {
-					entityList.push({
+					linkAnalysisVar.entityList.push({
 						type: item.type,
 						image: item.image
 					});
 				}
 			})
 
-			nodes.update(newNodes2);
+			linkAnalysisVar.nodes.update(newNodes2);
 		}
 		if (!_.isEmpty(newEdges2)) {
 			var newEdgesGrp = _.forEach(newEdges2, function(item) {
-				var ds = getDataSourceName(item['sourceAfiDocId']);
-				var dsColor = _.find(dsColors, function(it) { 
+				var ds = getDataSourceName(item[linkAnalysisVar.docId]);
+				var dsColor = _.find(linkAnalysisVar.dsColors, function(it) { 
 					return it.group === ds; 
 				})
 				if (_.isUndefined(dsColor)) {
@@ -351,12 +399,12 @@ function syncNetwork(jsonData) {
 						colorObj: colorObj,
 						color: colorObj.hex
 					}
-					dsColors.push(dsColor);
+					linkAnalysisVar.dsColors.push(dsColor);
 				}
 				
 				$.extend(true, item, dsColor);
 			})
-			edges.update(newEdgesGrp);
+			linkAnalysisVar.edges.update(newEdgesGrp);
 		}
 
 		updateColorLegend();
@@ -376,14 +424,14 @@ function getDataSourceName(sourceAfiDocId) {
 }
 
 function getGroupColor(grpName) {
-	var color = _.find(dsColors, function(item) { 
+	var color = _.find(linkAnalysisVar.dsColors, function(item) { 
 		return item.group === grpName; 
 	});
 	
 	if (_.isUndefined(color)) {
 		color = randomDarkColor();
 		while (true) {
-			var obj = _.find(dsColors, function(item) { 
+			var obj = _.find(linkAnalysisVar.dsColors, function(item) { 
 				return item.colorObj.hex === color.hex; 
 			});
 			if (_.isUndefined(obj)) {
@@ -400,7 +448,7 @@ function getGroupColor(grpName) {
 function updateColorLegend() {
 	theTemplateScript = $("#hb-color-legend").html();
 	theTemplate = Handlebars.compile(theTemplateScript);
-	content  = { dsColors: dsColors };
+	content  = { dsColors: linkAnalysisVar.dsColors };
 	compiledHtml = theTemplate(content);
 	$("#colorLegendPanelId").html(compiledHtml);
 }
@@ -408,7 +456,7 @@ function updateColorLegend() {
 function updateEntityLegend() {
 	theTemplateScript = $("#hb-entity-legend").html();
 	theTemplate = Handlebars.compile(theTemplateScript);
-	content  = { entityList: entityList };
+	content  = { entityList: linkAnalysisVar.entityList };
 	compiledHtml = theTemplate(content);
 	$("#entityLegendPanelId").html(compiledHtml);
 	
@@ -425,22 +473,29 @@ function hexToRgb(hex) {
 }
 
 function initDraw() {
-	nodes = new vis.DataSet([]);
-	edges = new vis.DataSet([]);
-	nodesDeleted = new vis.DataSet([]);
-	edgesDeleted = new vis.DataSet([]);
-	dsColors = [];
-	customLayout = {};
+	linkAnalysisVar.nodes = new vis.DataSet([]);
+	linkAnalysisVar.edges = new vis.DataSet([]);
+	linkAnalysisVar.nodesDeleted = new vis.DataSet([]);
+	linkAnalysisVar.edgesDeleted = new vis.DataSet([]);
+	linkAnalysisVar.dsColors = [];
+	linkAnalysisVar.customLayout = {};
+	linkAnalysisVar.heirarchy = $(".layoutDefault").data('value');
+	$(".heirarchy").siblings().css({
+		'background-color': linkAnalysisVar.deselectedColor
+	});
+	$(".layoutDefault").css({
+		'background-color': linkAnalysisVar.selectedColor
+	});
 	refresh();
 }
 
 function refresh() {
 	draw();
 	// put all cluster nodes back
-	var allNodes = nodes.get();
-	for (var i = 1; i <= resolveId; i++) {
+	var allNodes = linkAnalysisVar.nodes.get();
+	for (var i = 1; i <= linkAnalysisVar.resolveId; i++) {
 		var rId = createResolveId(i);
-		var c = nodes.get(rId);
+		var c = linkAnalysisVar.nodes.get(rId);
 		if (c != null) {
 			loadCluster(c);
 		}
@@ -448,10 +503,11 @@ function refresh() {
 }
 
 function draw() {
-	customLayout.randomSeed = 2;
-	var panelHeight = ($(window).height() - (($(".security-banner").height() * 2) + $(".navbar-header").height() + 75)) + "px";
+	linkAnalysisVar.customLayout.randomSeed = 2;
+	// height - 2 security banners, navbars, entity length + LA search bar
+	var panelHeight = ($(window).height() - (($(".security-banner").height() * 2) + $(".navbar-header").height() + 28 + 100)) + "px";
 	var options = {
-		layout: customLayout,
+		layout: linkAnalysisVar.customLayout,
 		height: panelHeight,
 		interaction: {
 			hideEdgesOnDrag: true,
@@ -459,10 +515,6 @@ function draw() {
 	    	navigationButtons: true
 	    },
 	    nodes: {
-	    	color: {
-	    		border: 'lime',
-	    		highlight: {border: 'lime'},
-	    	},
 	        scaling: {
 	            label: {
 	                min: 8,
@@ -477,7 +529,7 @@ function draw() {
             smooth: {
             	type: 'continuous'
             },
-			length: edgeLength
+			length: linkAnalysisVar.edgeLength
 		},
 		physics : {
 			stabilization: true,
@@ -489,79 +541,124 @@ function draw() {
 				damping: 0.09
 			},
 			maxVelocity: 25,
-			minVelocity: 1
+			minVelocity: 1,
+            timestep: 0.75,
 		}
 	};
 
 	var data = {
-		nodes : nodes,
-		edges : edges
+		nodes : linkAnalysisVar.nodes,
+		edges : linkAnalysisVar.edges
 	};
-	network = new vis.Network(container[0], data, options);
+	linkAnalysisVar.network = new vis.Network(linkAnalysisVar.container[0], data, options);
 	
 	registerNetworkListeners();
 
-	return network;
+	return linkAnalysisVar.network;
+}
+
+function mergeNodesAttributes(selectedNodes, resolveLabelName) {
+	var returnObj = {};
+	var cloneNode = $.extend(true, {}, selectedNodes[0]); // need to clone, otherwise, will set to actual node
+	
+	_.forIn(cloneNode, function(value, key) {
+		switch (key) {
+			case "values":
+				var mergedValues = cloneNode.values;
+				_.forEach(selectedNodes, function(node, i) {
+					if (i !== 0) {
+						_.forIn(node.values, function(value, key) {
+							if (_.isUndefined(mergedValues[key])) {
+								mergedValues[key] = value;
+							} else {
+								if (_.isArray(mergedValues[key]) || _.isArray(value)) {
+									if (_.isArray(mergedValues[key]) && _.isArray(value)) {
+										mergedValues[key].concat(value);
+									} else if (_.isArray(mergedValues[key])) {
+										mergedValues[key].push(value);
+									} else if (_.isArray(value)) { // Abraham merged multiple images from diff. src into one
+										mergedValues[key] += linkAnalysisVar.mergePropertySeparator + value.join(linkAnalysisVar.mergePropertySeparator);
+									}
+								} else {
+									var elements = mergedValues[key].split(linkAnalysisVar.mergePropertySeparator);
+									var existValue = _.find(elements, function (it) { 
+										return it === value;
+									});
+									if (_.isUndefined(existValue)) { // no duplicates
+										mergedValues[key] = mergedValues[key] + linkAnalysisVar.mergePropertySeparator + value;
+									}
+								}
+							}
+						});
+					}
+				});
+				
+				mergedValues.resolveLabel = resolveLabelName;
+				
+				returnObj[key] = mergedValues;
+				break;
+			case "seeAlso":
+				var mergedSeeAlso = cloneNode.seeAlso;
+				_.forEach(selectedNodes, function(node, i) {
+					if (i !== 0) {
+						var thisSeeAlso = node.seeAlso;
+						_.forEach(thisSeeAlso, function(it) {
+							var sameSeeAlsoItem = _.find(mergedSeeAlso, function(item) {
+								return item.displayValue === it.displayValue;
+							});
+							
+							if (_.isUndefined(sameSeeAlsoItem)) {
+								mergedSeeAlso.push(it);
+							}
+						});
+					}
+				});
+				
+				returnObj[key] = mergedSeeAlso;
+				break;
+		}
+	});
+	return returnObj;
 }
 
 function createClusterNode(selectedNodes, rId, resolveName) {
 	var largestNode = _.max(selectedNodes, function(e) {
-		return _.isUndefined(e.size)
-			? e.font.size
-			: e.size;
+		return e.size;
 	});
-	var imgSize = parseInt(_.isUndefined(largestNode.size) 
-		? largestNode.font.size 
-		: largestNode.size) + 4;
-	var sameType = _.every(selectedNodes, function(e) {
-		// don't compare by type, since person can be suspect or officer, which have diff. image
-		return selectedNodes[0].image == e.image;
+	var resolveLabelName = resolveName + ' [' + selectedNodes.length + ']';
+	var clusterNode = {
+		id: rId, 
+		resolveName: resolveName,
+		label: resolveLabelName, 
+		title: resolveLabelName, 
+		type: selectedNodes[0].type, 
+		cluster: true,
+		size: parseInt(largestNode.size) + 4, 
+		shape: "image", 
+		image: selectedNodes[0].image
+	};
+	
+	var mergeObj = mergeNodesAttributes(selectedNodes, resolveLabelName);
+	_.forIn(mergeObj, function(value, key) {
+		clusterNode[key] = value;
 	});
-	return sameType
-		? {
-			id: rId, 
-			resolveName: resolveName,
-			label: resolveName + ' [' + selectedNodes.length + ']', 
-			title: resolveName + ' [' + selectedNodes.length + ']', 
-			type: selectedNodes[0].type, 
-			cluster: true,
-			size: imgSize, 
-			shape: "image", 
-			image: selectedNodes[0].image
-		}
-		: {
-			id: rId, 
-			resolveName: resolveName,
-			label: resolveName + ' [' + selectedNodes.length + ']', 
-			title: resolveName + ' [' + selectedNodes.length + ']', 
-			type: 'Mixed',
-			cluster: true,
-			font: {size: imgSize},
-			shape: 'box'
-		};
+	
+	return clusterNode;
 }
 
 function reCluster() {
-	for (var i = 1; i < resolveId; i++) {
+	for (var i = 1; i < linkAnalysisVar.resolveId; i++) {
 		var rId = createResolveId(i);
-		var c = nodes.get({
+		var c = linkAnalysisVar.nodes.get({
 		    filter: function (item) {
 		    	return item.id === rId;
 		    }
 		});
-		if (c.length == 1) {
+		if (c.length === 1) {
 			var clusterNode = c[0];
-			var nodesInClusterIds = network.getNodesInCluster(clusterNode.id);
-			network.openCluster(clusterNode.id);
-			nodes.remove(clusterNode.id);
+			linkAnalysisVar.network.openCluster(clusterNode.id);
 			
-			var selectedNodes = nodes.get(nodesInClusterIds);
-
-			nodes.update(selectedNodes);
-			var cluster = createClusterNode(selectedNodes, rId, clusterNode.resolveName);
-			nodes.update(cluster);
-
-			loadCluster(cluster);			
+			loadCluster(clusterNode);			
 		}
 	}
 }
@@ -569,11 +666,11 @@ function reCluster() {
 function loadCluster(cluster) {
 	var clusterOptionsByData = {
 		joinCondition:function(childOptions) {
-			return childOptions[resolveNameId] == cluster.id;
+			return childOptions[linkAnalysisVar.resolveNameId] == cluster.id;
 		},
 		clusterNodeProperties: cluster
 	}
-	network.cluster(clusterOptionsByData);
+	linkAnalysisVar.network.cluster(clusterOptionsByData);
 }
 
 function isUnfielded(txt) {
@@ -581,39 +678,39 @@ function isUnfielded(txt) {
 }
 
 function createResolveId(resolveId) {
-	return 'resolveId-' + resolveId + "-";	
+	return 'resolveId-' + resolveId;	
 }
 
 function highlightNodes() {
 	selectNodesFromHighlight();
-	var curSelectedNodes = network.getSelectedNodes();
-	var allSelectedNodes = _.union(selectedNodes, curSelectedNodes);
+	var curSelectedNodes = linkAnalysisVar.network.getSelectedNodes();
+	var allSelectedNodes = _.union(linkAnalysisVar.selectedNodes, curSelectedNodes);
 	var nodeIdsNotClusterd = _.filter(allSelectedNodes, function(nodeId) {
-		var node = nodes.get(nodeId);
-		return (_.isUndefined(node[resolveNameId]) || node[resolveNameId] == '') ? true : false;
+		var node = linkAnalysisVar.nodes.get(nodeId);
+		return (_.isUndefined(node[linkAnalysisVar.resolveNameId]) || node[linkAnalysisVar.resolveNameId] == '') ? true : false;
 	});
-	network.selectNodes(nodeIdsNotClusterd);
-	ALERT.info(nodeIdsNotClusterd.length + " item(s) selected.", statusTimeout);
+	linkAnalysisVar.network.selectNodes(nodeIdsNotClusterd);
+	ALERT.info(nodeIdsNotClusterd.length + " item(s) selected.", linkAnalysisVar.statusTimeout);
 }
 
 function selectNodesFromHighlight() {
 	var fromX, toX, fromY, toY;
 	var nodesIdInDrawing = [];
-	var xRange = getStartToEnd(rect.startX, rect.w);
-	var yRange = getStartToEnd(rect.startY, rect.h);
-	if (!_.isUndefined(rect.startX) && !_.isUndefined(rect.startY)
-		&& !_.isUndefined(rect.w) && !_.isUndefined(rect.h)) {
-		var allNodes = nodes.get({returnType:"Object"});
+	var xRange = getStartToEnd(linkAnalysisVar.rect.startX, linkAnalysisVar.rect.w);
+	var yRange = getStartToEnd(linkAnalysisVar.rect.startY, linkAnalysisVar.rect.h);
+	if (!_.isUndefined(linkAnalysisVar.rect.startX) && !_.isUndefined(linkAnalysisVar.rect.startY)
+		&& !_.isUndefined(linkAnalysisVar.rect.w) && !_.isUndefined(linkAnalysisVar.rect.h)) {
+		var allNodes = linkAnalysisVar.nodes.get({returnType:"Object"});
 		_.each(allNodes, function(curNode) {
-			var nodePosition = network.getPositions([curNode.id]);
-			var nodeXY = network.canvasToDOM({x: nodePosition[curNode.id].x, y: nodePosition[curNode.id].y})
+			var nodePosition = linkAnalysisVar.network.getPositions([curNode.id]);
+			var nodeXY = linkAnalysisVar.network.canvasToDOM({x: nodePosition[curNode.id].x, y: nodePosition[curNode.id].y})
 			if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end
 					&& yRange.start <= nodeXY.y && nodeXY.y <= yRange.end) {
 				nodesIdInDrawing.push(curNode.id);
 			}
 		});
 	}
-	network.selectNodes(nodesIdInDrawing);
+	linkAnalysisVar.network.selectNodes(nodesIdInDrawing);
 }
 
 function getStartToEnd(start, theLen) {
@@ -623,45 +720,63 @@ function getStartToEnd(start, theLen) {
 }
 
 function removeSelectedNodes() {
-	var selection = network.getSelection();
+	var selection = linkAnalysisVar.network.getSelection();
 	// somehow some selection may have null values, so remove it
-	var selectedNodes = _.filter(nodes.get(selection.nodes), function(item) {
+	var selectedNodes = _.filter(linkAnalysisVar.nodes.get(selection.nodes), function(item) {
 		return item != null;
 	});
-	var selectedEdges = _.filter(edges.get(selection.edges), function(item) {
-		return item != null;
-	});
-	nodesDeleted.update(selectedNodes);
-	edgesDeleted.update(selectedEdges);
-	nodes.remove(selection.nodes);
-	edges.remove(selection.edges);
-	
-	// update entity legend
-	var newEntityList = _.remove(entityList, function(entity) {
-		var foundNodes = nodes.get({
-			filter: function (item) {
-				return (item.image === entity.image);
+	bootbox.dialog({
+		title : "Remove node(s)",
+		message : "Are you sure you want to delete " + selectedNodes.length + " nodes? This action cannot be undone.",
+		buttons : {
+			main : {
+				label : "OK",
+				className : "btn-primary",
+				callback : function() {
+	            	var selection = linkAnalysisVar.network.getSelection();
+	            	// somehow some selection may have null values, so remove it
+	            	var selectedNodes = _.filter(linkAnalysisVar.nodes.get(selection.nodes), function(item) {
+	            		return item != null;
+	            	});
+	            	var selectedEdges = _.filter(linkAnalysisVar.edges.get(selection.edges), function(item) {
+	            		return item != null;
+	            	});
+	            	linkAnalysisVar.nodesDeleted.update(selectedNodes);
+	            	linkAnalysisVar.edgesDeleted.update(selectedEdges);
+	            	linkAnalysisVar.nodes.remove(selection.nodes);
+	            	linkAnalysisVar.edges.remove(selection.edges);
+	            	
+	            	// update entity legend
+	            	var newEntityList = _.remove(linkAnalysisVar.entityList, function(entity) {
+	            		var foundNodes = linkAnalysisVar.nodes.get({
+	            			filter: function (item) {
+	            				return (item.image === entity.image);
+	            			}
+	            		});
+	            		
+	            		return foundNodes.length > 0;
+	            	});
+	            	
+	            	linkAnalysisVar.entityList = newEntityList;
+	            	updateEntityLegend();
+	            	
+	            	if (!_.isEmpty(linkAnalysisVar.nodes.get()) && !_.isUndefined(linkAnalysisVar.network.popup) && !_.isUndefined(linkAnalysisVar.nodes.get()[0])) {
+	            		linkAnalysisVar.network.popup.popupTargetId = linkAnalysisVar.nodes.get()[0].id;
+	            	}
+	            	
+	            	linkAnalysisVar.network.unselectAll();
+            	}
 			}
-		});
-		
-		return foundNodes.length > 0;
+		}
 	});
-	
-	entityList = newEntityList;
-	updateEntityLegend();
-	
-	if (!_.isEmpty(nodes.get()) && !_.isUndefined(network.popup) && !_.isUndefined(nodes.get()[0])) {
-		network.popup.popupTargetId = nodes.get()[0].id;
-	}
-	
 }
 
 function saveDrawingSurface() {
 	var saved = false;
-	var canvas = network.canvas.frame.canvas;
+	var canvas = linkAnalysisVar.network.canvas.frame.canvas;
 	var ctx = canvas.getContext('2d');
 	try {
-	    drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	    linkAnalysisVar.drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	    saved = true;
 	} catch(err) {
 	}
@@ -672,7 +787,7 @@ function saveDrawingSurface() {
 function restoreDrawingSurface(ctx) {
 	var restored = false;
 	try {
-		ctx.putImageData(drawingSurfaceImageData, 0, 0);
+		ctx.putImageData(linkAnalysisVar.drawingSurfaceImageData, 0, 0);
 		restored = true;
 	} catch(err) {
 	}
@@ -680,61 +795,68 @@ function restoreDrawingSurface(ctx) {
 }
 
 function registerNetworkListeners() {
-	network.on("oncontext", function (e) {
+	linkAnalysisVar.network.on("oncontext", function (e) {
 		if (e.nodes.length != 0) {
-			network.selectNodes(e.nodes);
-			var selection = network.getSelection();
+			linkAnalysisVar.network.selectNodes(e.nodes);
+			var selection = linkAnalysisVar.network.getSelection();
 			var theTemplateScript = $("#hb-context-menu").html();
 			var theTemplate = Handlebars.compile(theTemplateScript);
-			var seeAlsoList;
-			var selectedNodes = nodes.get(e.nodes);
-			if (selectedNodes.length == 1 && selectedNodes[0] != null) {
-				seeAlsoList = selectedNodes[0].seeAlso;
+			var selectedNodes = linkAnalysisVar.nodes.get(e.nodes);
+			var hasSameType = false;
+			if ( e.nodes.length > 1) {
+				var entityType = selectedNodes[0].type;
+				hasSameType = _.every(selectedNodes, function(item) {
+					return item.type === entityType;
+				});
 			}
 			var canClusterExpand = _.some(e.nodes, function(e) {
-				return network.isCluster(e);
+				return linkAnalysisVar.network.isCluster(e);
 			});
 			var content  = {
-				viewProperties: !network.isCluster(e.nodes[0]) && e.nodes.length == 1,
-				seeAlso: seeAlsoList,
-				canCluster: e.nodes.length > 1,
+				oneSelected: e.nodes.length === 1,
+				canCluster: hasSameType,
 				canClusterExpand: canClusterExpand,
 			};
 			var compiledHtml = theTemplate(content);
 			$("#contextMenu").html(compiledHtml);
+			// calculate where to display menu so it does not off screen
 			$("#contextMenu").css({
-				display : "block",
-				left : e.pointer.DOM.x + container.offset().left,
-				top : e.pointer.DOM.y + container.offset().top
+				display: "block",
+				left: e.pointer.DOM.x < ($(window).width() / 2)
+					? e.pointer.DOM.x + linkAnalysisVar.container.offset().left
+					: (e.pointer.DOM.x + linkAnalysisVar.container.offset().left) - $("#contextMenu").width(),
+				top: e.pointer.DOM.y < ($(window).height() / 2)
+					? e.pointer.DOM.y + linkAnalysisVar.container.offset().top
+					: (e.pointer.DOM.y + linkAnalysisVar.container.offset().top) - $("#contextMenu").height()
 			});
 		}
 		return false;
 	});
 	
-	network.on("click", function() {
+	linkAnalysisVar.network.on("click", function() {
 		$("#contextMenu").hide();
 	});
 
-    network.on("dragStart", function (params) {
-		if (highlighting) { 
-	    	drag = true;
+    linkAnalysisVar.network.on("dragStart", function (params) {
+		if (linkAnalysisVar.highlighting) { 
+	    	linkAnalysisVar.drag = true;
 	    	
 			// handles multiple selection w/ Ctrl key
-			selectedNodes = params.event.srcEvent.ctrlKey ? network.getSelectedNodes() : null;
+			linkAnalysisVar.selectedNodes = params.event.srcEvent.ctrlKey ? linkAnalysisVar.network.getSelectedNodes() : null;
 	    	
-			rect.startX = params.pointer.DOM.x;
-			rect.startY = params.pointer.DOM.y;
-			container[0].style.cursor = "crosshair";
+			linkAnalysisVar.rect.startX = params.pointer.DOM.x;
+			linkAnalysisVar.rect.startY = params.pointer.DOM.y;
+			linkAnalysisVar.container[0].style.cursor = "crosshair";
 			saveDrawingSurface();
 		}
 	});
     
-    network.on("dragging", function (params) {
-		if (highlighting && drag) { 
-			var canvas = network.canvas.frame.canvas;
+    linkAnalysisVar.network.on("dragging", function (params) {
+		if (linkAnalysisVar.highlighting && linkAnalysisVar.drag) { 
+			var canvas = linkAnalysisVar.network.canvas.frame.canvas;
 			var ctx = canvas.getContext('2d');
-			rect.w = params.pointer.DOM.x - rect.startX;
-			rect.h = params.pointer.DOM.y - rect.startY ;
+			linkAnalysisVar.rect.w = params.pointer.DOM.x - linkAnalysisVar.rect.startX;
+			linkAnalysisVar.rect.h = params.pointer.DOM.y - linkAnalysisVar.rect.startY ;
 			
 			if (restoreDrawingSurface(ctx)) {
 				drawHighlightRectangle(ctx);
@@ -742,13 +864,13 @@ function registerNetworkListeners() {
 		}
     });
     
-    network.on("dragEnd", function (params) {
-		if (highlighting && drag) { 
-			container[0].style.cursor = "default";
-			var canvas = network.canvas.frame.canvas;
+    linkAnalysisVar.network.on("dragEnd", function (params) {
+		if (linkAnalysisVar.highlighting && linkAnalysisVar.drag) { 
+			linkAnalysisVar.container[0].style.cursor = "default";
+			var canvas = linkAnalysisVar.network.canvas.frame.canvas;
 			var ctx = canvas.getContext('2d');
-			rect.w = params.pointer.DOM.x - rect.startX;
-			rect.h = params.pointer.DOM.y - rect.startY ;
+			linkAnalysisVar.rect.w = params.pointer.DOM.x - linkAnalysisVar.rect.startX;
+			linkAnalysisVar.rect.h = params.pointer.DOM.y - linkAnalysisVar.rect.startY ;
 			
 			if (restoreDrawingSurface(ctx)) {
 				highlightNodes();
@@ -762,8 +884,8 @@ function registerNetworkListeners() {
 					}, 300);
 				}, 50);
 			}
-			drawingSurfaceImageData = null;
-			drag = false;
+			linkAnalysisVar.drawingSurfaceImageData = null;
+			linkAnalysisVar.drag = false;
 		}
     });	
 }
@@ -773,90 +895,66 @@ function registerPageListeners() {
 	document.body.oncontextmenu = function() {return false;}
 
 	$("#contextMenu").on("click", "a", function(e) {
-		var selection = network.getSelection();
+		var selection = linkAnalysisVar.network.getSelection();
 		var selectedMenuItem = $(e.target).text();
 
 		switch (selectedMenuItem) {
 			case "View Detail":
 				// currently removed from menu
-				var selectedNodes = nodes.get(selection.nodes);
-				window.open('/search/document/' + selectedNodes[0]['sourceAfiDocId'],'_blank');
+				var selectedNodes = linkAnalysisVar.nodes.get(selection.nodes);
+				window.open('/search/document/' + selectedNodes[0][linkAnalysisVar.docId],'_blank');
 				break;
 			case "Remove From Graph":
 				removeSelectedNodes();
 				break;
 			case "Resolve":
-				var theTemplateScript = $("#hb-resolve-input").html();
-				var theTemplate = Handlebars.compile(theTemplateScript);
-				var content  = {
-					totalNodesSelected: selection.nodes.length,
-					resolveName: 'Resolve #' + resolveId
-				};
-				var compiledHtml = theTemplate(content);
-				$("#resolveInputForm").html(compiledHtml);
-				
-				$('#resolveInputPanelId').puidialog({
-			        minimizable: false,
-			        maximizable: false,
-			        draggable: false,
-			        responsive: true,
-			        modal: true,
-			        afterShow: function(event) {
-			        	resolveDialogOpen = true;
-			        },
-	                afterHide: function(event) {
-	                	resolveDialogOpen = false;
-	                },
-			        buttons: [{
-		                text: 'OK',
-		                icon: 'fa-check',
-		                click: function() {
-		            		var selection = network.getSelection();
-		    				var resolveName = $("#resolveName").val().trim();
-		    				var rId = createResolveId(resolveId);
-		    				var selectedNodes = _.without(nodes.get(selection.nodes), null);
-		    				var sameType = _.every(selectedNodes, function(e) {
-		    					// don't compare by type, since person can be suspect or officer, which have diff. image
-		    					return selectedNodes[0].image == e.image;
-		    				});
+        		var selection = linkAnalysisVar.network.getSelection();
+				var selectedNodes = _.without(linkAnalysisVar.nodes.get(selection.nodes), null);
+	        	linkAnalysisVar.resolveDialogOpen = true;
+				bootbox.prompt({
+					title : "Enter name for " + selection.nodes.length + " resolved object(s)",
+					value : selectedNodes[0].label,
+					callback : function(result) {
+						if (result !== null) {
+		            		var selection = linkAnalysisVar.network.getSelection();
+		    				var resolveName = result.trim();
+		    				var rId = createResolveId(linkAnalysisVar.resolveId);
+		    				var selectedNodes = _.without(linkAnalysisVar.nodes.get(selection.nodes), null);
 		    					
 		    				_.each(selectedNodes, function(item) {
-		    					item[resolveNameId] = rId;
+		    					item[linkAnalysisVar.resolveNameId] = rId;
 		    				});
 
-		    				nodes.update(selectedNodes);
+		    				linkAnalysisVar.nodes.update(selectedNodes);
 		    				var cluster = createClusterNode(selectedNodes, rId, resolveName);
-		    				nodes.update(cluster);
+		    				linkAnalysisVar.nodes.update(cluster);
 
 		    				loadCluster(cluster);
-		    				resolveId++;
-		    				network.unselectAll();
-		    				
-		                    $('#resolveInputPanelId').puidialog('hide');
-		                }
-		            }]
-			    });
-				
-				$('#resolveInputPanelId').puidialog('show');
-				
+		    				linkAnalysisVar.resolveId++;
+		    				linkAnalysisVar.network.unselectAll();
+						}
+	                	linkAnalysisVar.resolveDialogOpen = false;
+					}
+				});
+
 				break;
 			case "Un-Resolve":
 				_.each(selection.nodes, function(item) {
-					if (network.isCluster(item)) {
-						var nodesInCluster = network.getNodesInCluster(item);
+					if (linkAnalysisVar.network.isCluster(item)) {
+						var nodesInCluster = linkAnalysisVar.network.getNodesInCluster(item);
 						_.each(nodesInCluster, function(it) {
-							var node = nodes.get(it);
-							node[resolveNameId] = '';
-							nodes.update(node);
-							node = nodes.get(it);
+							var node = linkAnalysisVar.nodes.get(it);
+							node[linkAnalysisVar.resolveNameId] = '';
+							linkAnalysisVar.nodes.update(node);
+							node = linkAnalysisVar.nodes.get(it);
 						})
-						network.openCluster(item);
-						nodes.remove(item);
+						linkAnalysisVar.network.openCluster(item);
+						linkAnalysisVar.nodes.remove(item);
 					}
 				});
 				break;
 			case "Properties":
-				var selectedNodes = nodes.get(selection.nodes);
+				var selectedNodes = linkAnalysisVar.nodes.get(selection.nodes);
 				if (!_.isUndefined(selectedNodes[0])) {
 					var idStr = selectedNodes[0]['id'].replace(/[^a-z\d]/gi, '-').toLowerCase();
 					var dialogId = idStr + "-dialog";
@@ -893,100 +991,54 @@ function registerPageListeners() {
 				    $("#" + dialogId).puidialog('show');
 				}
 				break;
-			default:
-				if (selectedMenuItem != "See Also") {
-					var selectedNodes = nodes.get(selection.nodes);
-					var seeAlsoItem = _.findWhere(selectedNodes[0].seeAlso, {
-						displayValue: selectedMenuItem.lastIndexOf(" ") == -1 
-							? selectedMenuItem 
-							: selectedMenuItem.substring(0, selectedMenuItem.lastIndexOf(" "))
+			case "See Also":
+				var selectedNodes = linkAnalysisVar.nodes.get(selection.nodes);
+				if (!_.isUndefined(selectedNodes[0])) {
+					var idStr = selectedNodes[0]['id'].replace(/[^a-z\d]/gi, '-').toLowerCase();
+					var seeAlsoList = selectedNodes[0].seeAlso;
+					
+					var theTemplateScript = $("#hb-see-also").html();
+					var theTemplate = Handlebars.compile(theTemplateScript);
+					var content  = {
+						seeAlso: seeAlsoList,
+					};
+					var compiledHtml = theTemplate(content);
+					var bootBoxModal = bootbox.dialog({
+						title: "See Also for " + idStr,
+						message: compiledHtml
 					});
-					if (!_.isUndefined(seeAlsoItem) && !_.isNull(seeAlsoItem)) {
-						var rows = $('#laRows').val();
-						var queryType = seeAlsoItem.queries.and; // default to and
-						if (_.endsWith(selectedMenuItem, "-OR)")) {
-							queryType = seeAlsoItem.queries.or;
-						}
-						
-						var query = isUnfielded(selectedMenuItem) ? queryType.unfielded : queryType.fielded;
-						
-						var postData = {
-							"query": query,
-						    "start": 0,
-						    "rows": rows,
-						    "matchAll": true,
-						    "newSearch": true
-						};
-						if ($("#laFilterQuery").val()) {
-							postData.filterQuery = { "AFI__DOC_TYPE_t": [ $("#laFilterQuery").val() ] };
-						}
-						if ($("#laFacet").val()) {
-							postData.facet = true;
-							postData.facetMethod = "fc";
-							postData.facetField = $("#laFacet").val();
-						}
-						ALERT.info("Retrieving " + rows + " document(s) with query, " + query, statusTimeout);
-						search(postData);
-					}
+					
+					new LinkAnalysisSeeAlsoView(bootBoxModal);
 				}
+				break;
 		}
-		if (selectedMenuItem != "Resolve") {
-			network.unselectAll();
+		if (selectedMenuItem != "Resolve"
+			&& selectedMenuItem != "Remove From Graph") {
+			linkAnalysisVar.network.unselectAll();
 		}
 		$("#contextMenu").hide();
 	});
     
 	$(document).keyup(function(e){
-	    if (e.keyCode == 46 && !resolveDialogOpen) { // delete button pressed
+	    if (e.keyCode == 46 && !linkAnalysisVar.resolveDialogOpen) { // delete button pressed
 	    	removeSelectedNodes();
 	    }
 	}) 
-
-	$('#optionsMenu').puitieredmenu({
-	    popup: true,
-	    trigger: $('#optionsTrigger')
-	});
-	
-	$('#highLightId').change(function() {
-		highlighting = $(this).prop('checked');
-		network.setOptions({
-			interaction: { 
-				dragView: !highlighting, 
-				dragNodes: !highlighting,
-				hideEdgesOnDrag: !highlighting
-			}
-		});
-	});
-	
-	$("#stretchId").val(edgeLength);
-	$('#stretchId').puispinner({
-		min: minEdgeLength,
-        max: maxEdgeLength,
-		step: 50
-	});
-	$('#stretchId').change(function() {
-		edgeLength = parseInt($('#stretchId').val());
-		if (edgeLength >= minEdgeLength && edgeLength <= maxEdgeLength) {
-			network.setOptions({edges: {length: edgeLength}});
-		} else {
-			ALERT.warning("Value must be between " + minEdgeLength + " and " + maxEdgeLength + ".", statusTimeout);
-		}
-	});
 }
 
 function drawHighlightRectangle(ctx) {
 	ctx.setLineDash([5]);
 	ctx.strokeStyle = "rgb(0, 102, 0)";
-	ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
+	ctx.strokeRect(linkAnalysisVar.rect.startX, linkAnalysisVar.rect.startY, linkAnalysisVar.rect.w, linkAnalysisVar.rect.h);
 	ctx.setLineDash([]);
 	ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
-	ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
+	ctx.fillRect(linkAnalysisVar.rect.startX, linkAnalysisVar.rect.startY, linkAnalysisVar.rect.w, linkAnalysisVar.rect.h);
 }
 
 function randomDarkColor() {
-	var color = colors[Math.floor(Math.random() * (colors.length - 0)) + 0];
+	var color = linkAnalysisVar.colors[Math.floor(Math.random() * (linkAnalysisVar.colors.length - 0)) + 0];
 	while (!isDarkColor(color.hex)) {
-		color = colors[Math.floor(Math.random() * (colors.length - 0)) + 0];
+		color = linkAnalysisVar.colors[Math.floor(Math.random() * (linkAnalysisVar.colors.length - 0)) + 0];
 	}
 	
 	return color;
@@ -999,40 +1051,54 @@ function isDarkColor(hexColor) {
     return o > 192 ? false : true;
 }
 
-var cssColors = loadJson("/js/css-color-names.json");
-var colors = []; // = loadJson("/static/js/search/crayola.json");
-var nodes, edges, nodesDeleted, edgesDeleted, network;
-var statusTimeout = 250;
-var entityList = [];
-var resolveId = 1;
-var resolveNameId = 'resolveId';
-var customLayout;
-var minEdgeLength = 200;
-var maxEdgeLength = 1000;
-var edgeLength = 250;
-var i2Disabled = false;
-var container = $("#network");
-var drawingSurfaceImageData, selectedNodes;
-var rect = {};
-var drag = false;
-var highlighting = false;
-var resolveDialogOpen = false;
-var dsColors;
-var laView, laOptionsView, laDsColorView;
-var loadAlready = false;
+var linkAnalysisVar = {
+	cssColors: loadJson("/js/css-color-names.json"),
+	colors: [],
+	entityList: [],
+	minEdgeLength: 200,
+	maxEdgeLength: 1000,
+	edgeStep: 50,
+	edgeLength: 250,
+	statusTimeout: 500,
+	docId: 'sourceAfiDocId',
+	resolveId: 1,
+	resolveNameId: 'resolveId',
+	mergePropertySeparator: '; ',
+	i2Disabled: false,
+	hoverColor: 'lime',
+	selectedColor: 'darkgray',
+	deselectedColor: 'transparent',
+	drag: false,
+	highlighting: false,
+	freeze: false,
+	heirarchy: $(".layoutDefault").data('value'),
+	resolveDialogOpen: false,
+	rect: {},
+	drawingSurfaceImageData: undefined,
+	selectedNodes: undefined, // be careful here since same name use in various places
+	container:  $("#network"),
+	customLayout: undefined,
+	dsColors: undefined,
+	laView: undefined,
+	nodes: undefined,
+	edges: undefined,
+	nodesDeleted: undefined,
+	edgesDeleted: undefined,
+	network: undefined,
+	loadAlready: false
+};
 
 $(document).ready(function() {
 	var queryStr = getUrlVars();
 	
-	_.mapKeys(cssColors, function(value, key) {
-		colors.push({name: key, hex: value});
+	_.mapKeys(linkAnalysisVar.cssColors, function(value, key) {
+		linkAnalysisVar.colors.push({name: key, hex: value});
 	});
 
 	initDraw();
 
-	laOptionsView = new LinkAnalysisOptionsView();
-	laDsColorView = new LinkAnalysisDataSourceColorView();
-	laView = new LinkAnalysisView({
+	new LinkAnalysisDataSourceColorView();
+	linkAnalysisVar.laView = new LinkAnalysisView({
 		model : new LinkAnalysisModel({ 
 			query: queryStr.query,
 			start: queryStr.start, 
@@ -1042,16 +1108,15 @@ $(document).ready(function() {
 		})
 	});
 	
-	laView.search();
-	laView.model.set('start', '0'); 
-	laView.model.set('filterQuery', ''); 
+	linkAnalysisVar.laView.search();
+	linkAnalysisVar.laView.model.set('start', '0'); 
+	linkAnalysisVar.laView.model.set('filterQuery', ''); 
 	
-	i2Disabled = false;
+	linkAnalysisVar.i2Disabled = false;
 
 	registerPageListeners();
-	$('#highLightId').bootstrapToggle(highlighting ? 'on' : 'off');		
 	
-	if (nodes.length == 0) {
+	if (linkAnalysisVar.nodes.length == 0) {
 		ALERT.warning("Data cannot be represented in the chart! Please try again.");
 	}
 
@@ -1107,7 +1172,28 @@ Handlebars.registerHelper('getProperties', function (obj) {
 			strArray.push(name);
 			strArray.push('</td>');
 			strArray.push('<td>');
-			strArray.push(value);
+			if (key === linkAnalysisVar.docId) {
+				// need to split since this may be a resolved nodes
+				var sources;
+				if (_.isArray(value)) { // e.g. imageContent
+					sources = value;
+				} else {
+					sources = value.split(linkAnalysisVar.mergePropertySeparator); 
+				}
+				_.forEach(sources, function(item, i) {
+					if (i !== 0) {
+						strArray.push(linkAnalysisVar.mergePropertySeparator);
+						strArray.push(" ");
+					}
+					strArray.push("<a target='_blank' href='/search/document/");
+					strArray.push(item);
+					strArray.push("'>");
+					strArray.push(item);
+					strArray.push("</a>");
+				});
+			} else {
+				strArray.push(value);
+			}
 			strArray.push('</td>');
 			strArray.push('</tr>');;
 		}
@@ -1116,14 +1202,8 @@ Handlebars.registerHelper('getProperties', function (obj) {
 	return strArray.join("");
 });	
 	        		
-Handlebars.registerHelper('loadSeeAlso', function (displayValue) {
-	if (displayValue.search(" ") == -1) { // single term
-		return "<li><a href=\"#\">" + displayValue + " (FIELDED)</a></li>\n" 
-			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED)</a></li>\n";
-	} else { // multiple terms
-		return "<li><a href=\"#\">" + displayValue + " (FIELDED-AND)</a></li>\n" 
-			+ "<li><a href=\"#\">" + displayValue + " (FIELDED-OR)</a></li>\n" 
-			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED-AND)</a></li>\n" 
-			+ "<li><a href=\"#\">" + displayValue + " (UNFIELDED-OR)</a></li>\n";
-	}
-});	
+Handlebars.registerHelper('seeAlsoSingleTerm', function(seeAlsoItem, options) {
+	return seeAlsoItem.displayValue.search(" ") === -1
+		? options.fn(this)
+		: options.inverse(this);
+});

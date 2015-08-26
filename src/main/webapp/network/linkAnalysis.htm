@@ -41,7 +41,6 @@
 	</ul>
 
 <script id="hb-color-legend" type="text/x-handlebars-template">
-<script id="hb-color-legend" type="text/x-handlebars-template">
 <table id="dsColorTableId" class="table table-bordered" style="font-size: smaller">
     <thead>
 		<tr style="background-color: wheat">
@@ -62,16 +61,8 @@
 
 <script id="hb-entity-legend" type="text/x-handlebars-template">
 {{#each entityList}}
-	<span class="left"><img src="{{this.image}}" class="entityType" data-value="{{this.image}}" data-toggle="tooltip" data-placement="bottom" width="28" height="28" title="Select all {{this.type}}"></span>
+	<img src="{{this.image}}" class="entityType selectable img-thumbnail" data-value="{{this.image}}" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Select all {{this.type}}s">
 {{/each}}
-</script>
-
-<script id="hb-resolve-input" type="text/x-handlebars-template">
-<div id="resolveInputPanelId" title="Enter name for {{totalNodesSelected}} resolved object(s)">
-	<div class="col-md-12">
-		<input id="resolveName" placeholder="Enter name" class="form-control input-md" size="25" type="text" value="{{resolveName}}">
-	</div>
-</div>
 </script>
 
 <script id="hb-properties-dialog" type="text/x-handlebars-template">
@@ -90,47 +81,65 @@
 </div>	
 </script>
 
-<script id="hb-view-properties" type="text/x-handlebars-template">
-<div id="propertiesId">
-<table class="table">
-    <thead>
-		<tr>
-		    <th>Name</th>
-		    <th>Value</th>
-		</tr>
-    </thead>
-    <tbody>
-    	{{{getProperties selectedNode}}}
-    </tbody>
-  </table>
-</div>
-</script>
-
 <script id="hb-context-menu" type="text/x-handlebars-template">
 	<ul id="networkContextMenuId" class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu" style="display: block; position: static; margin-bottom: 5px;">
-		{{#if seeAlso}}
-		<li class="dropdown-submenu">
-			<a href="#">See Also</a>
-			<ul class="dropdown-menu">
-				{{#each seeAlso}}
-				{{{addDivider @index}}}
-				{{{loadSeeAlso this.displayValue}}}
-		        {{/each}}
-			</ul>
-		</li>
-		<li class="divider"></li>
-		{{/if}}
 		{{#if allowMerge}}
-		<li><a>Merge</a></li>
-		<li class="divider"></li>
+			<li><a>Merge</a></li>
+			<li class="divider"></li>
 		{{/if}}
 		{{#if this.canCluster}}<li><a>Resolve</a></li>{{/if}}
 		{{#if this.canClusterExpand}}<li><a>Un-Resolve</a></li>{{/if}}
 		<li><a>Remove From Graph</a></li>
-		{{#if this.viewProperties}}
-		<li><a>Properties</a></li>
+		{{#if this.oneSelected}}
+			<li><a>Properties</a></li>
+			<li class="divider"></li>
+			<li><a>See Also</a></li>
 		{{/if}}
 	</ul>
+</script>
+
+<script id="hb-see-also" type="text/x-handlebars-template">
+<div id="seeAlsoId">
+<table class="table table-bordered table-hover">
+    <thead>
+		<tr>
+		    <th>Name</th>
+		    <th>Query</th>
+		</tr>
+    </thead>
+    <tbody>
+		{{#each seeAlso}}
+			{{#seeAlsoSingleTerm this}}
+				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.fielded }}}">
+					<td>{{{ displayValue }}} (FIELDED)</td>
+					<td>{{{ queries.and.fielded }}}</td>
+				</tr>
+				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.unfielded }}}">
+					<td>{{{ displayValue }}} (UNFIELDED)</td>
+					<td>{{{ queries.and.unfielded }}}</td>
+				</tr>
+			{{else}}
+				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.fielded }}}">
+					<td>{{{ displayValue }}} (FIELDED-AND)</td>
+					<td>{{{ queries.and.fielded }}}</td>
+				</tr>
+				<tr class="bySeeAlso" data-see-also-query="{{{ queries.or.fielded }}}">
+					<td>{{{ displayValue }}} (FIELDED-OR)</td>
+					<td>{{{ queries.or.fielded }}}</td>
+				</tr>
+				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.unfielded }}}">
+					<td>{{{ displayValue }}} (UNFIELDED-AND)</td>
+					<td>{{{ queries.and.unfielded }}}</td>
+				</tr>
+				<tr class="bySeeAlso" data-see-also-query="{{{ queries.or.unfielded }}}">
+					<td>{{{ displayValue }}} (UNFIELDED-OR)</td>
+					<td>{{{ queries.or.unfielded }}}</td>
+				</tr>
+			{{/seeAlsoSingleTerm}}
+	    {{/each}}
+    </tbody>
+  </table>
+</div>
 </script>
 
 <script id="hb-rows" type="text/x-handlebars-template">
@@ -152,73 +161,69 @@
 	{{/each}}
 </script>
 
-<div id="content" class="content">
+<div id="content" class="content" style="background-color: whitesmoke;">
 	<div id="manualSearch" class="row">
-		<div class="col-md-10">
+		<div class="col-md-12 bg-info">
 			<form class="form-inline" style="display:inline" onsubmit="return false;">
 				<div class="form-group">
-					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-md" size="40" type="text">
+					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-sm" size="40" type="text">
 				</div>
 				<div class="form-group" data-toggle="tooltip" title="Facets">
-					<select id="laFacet" class="form-control"></select>
+					<select id="laFacet" class="form-control input-sm"></select>
 				</div>
 				<div class="form-group" data-toggle="tooltip" title="Filters">
-					<select id="laFilterQuery" class="form-control"></select>
+					<select id="laFilterQuery" class="form-control input-sm"></select>
 				</div>
 				<div class="form-group" data-toggle="tooltip" title="# of rows">
-					<select id="laRows" class="form-control"></select>
+					<select id="laRows" class="form-control input-sm"></select>
 				</div>
 				<div class="form-group">
-					<button type="button" id="laSearchBtn" class="btn btn-primary fa fa-link"> Link</button>
+					<button type="button" id="laSearchBtn" class="btn btn-primary btn-sm"><i class="fa fa-link"></i> Link</button>
+				</div>
+				<div class="btn-group">
+					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<i class="fa fa-download"></i> i2 Export <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu">
+			            <li id="laI2ExportBtn"><a href="#"><i class="fa fa-eye"></i> i2 Viewer</a></li>
+				    	<li id="laI2XmlExportBtn"><a href="#"><i class="fa fa-file-code-o"></i> i2 iXv (XML)</a></li>
+					</ul>
 				</div>
 			</form>
-			<button id="optionsTrigger" class="btn btn-default fa fa-cog"> Options</button>
-			<ul id="optionsMenu">
-			    <li id="laClearBtn"><a data-icon="fa-file-o" href="#"> Clear</a></li>
-			    <li id="laColorBtn"><a data-icon="fa-paint-brush" href="#"> Colors</a></li>
-			    <li>
-			    	<a data-icon="fa-sitemap"> Layouts</a>
-			        <ul> 
-			            <li id="udBtn"><a data-icon="fa-arrow-down" href="#"> Up-Down</a></li>
-				    	<li id="duBtn"><a data-icon="fa-arrow-up" href="#"> Down-Up</a></li>
-				    	<li id="lrBtn"><a data-icon="fa-arrow-right" href="#"> Left-Right</a></li>
-				    	<li id="rlBtn"><a data-icon="fa-arrow-left" href="#"> Right-Left</a></li>
-				    	<li id="defaultLayoutBtn"><a data-icon="fa-arrows" href="#"> Default</a></li>
-			        </ul>
-			    </li>
-			    <li>
-			    	<a data-icon="fa-download"> i2 Export</a>
-			        <ul> 
-			            <li id="laI2ExportBtn"><a data-icon="fa-eye" href="#"> i2 Viewer</a></li>
-				    	<li id="laI2XmlExportBtn"><a data-icon="fa-file-code-o" href="#"> i2 iXv (XML)</a></li>
-			        </ul>
-			    </li>
-			</ul>
 		</div>
-		<div class="col-md-2 text-right">
-			<span data-toggle="tooltip" title="Move or highlight by dragging mouse">
-				<input id="highLightId" data-toggle="toggle" data-on="Highlight" data-off="Move View" data-size="small" type="checkbox">
-			</span>
-			<input id="stretchId" data-toggle="tooltip" title="Line size" type="text" maxlength="4" size="4"/>
+		<div class="col-md-12" style="border-bottom: 1px solid #ccc;"></div>
+		<div class="col-md-6 text-left">
+			<img id="laClearBtn" src="../img/toolbar/clear.png" class="selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Clear">
+			<img src="../img/toolbar/highlight.png" class="highlighting selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Highlight">
+			<img src="../img/toolbar/freeze.png" class="freezing selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Freeze">
+			
+			<span class="right">&nbsp;</span>
+			
+			<img src="../img/toolbar/up-down.png" class="heirarchy selectable img-thumbnail" data-value="UD" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Up-Down">
+			<img src="../img/toolbar/down-up.png" class="heirarchy selectable img-thumbnail" data-value="DU" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Down-Up">
+			<img src="../img/toolbar/left-right.png" class="heirarchy selectable img-thumbnail" data-value="LR" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Left-Right">
+			<img src="../img/toolbar/right-left.png" class="heirarchy selectable img-thumbnail" data-value="RL" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Right-Left">
+			<img src="../img/toolbar/default-layout.png" class="heirarchy layoutDefault selectable img-thumbnail" data-value="DEFAULT" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Default">
+			
+			<span class="right">&nbsp;</span>
+
+			<img id="laColorBtn" src="../img/toolbar/palette.png" class="selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Color Legend">
+
+			<span class="right">&nbsp;</span>
+            
+			<img src="../img/toolbar/expand.png" class="stretching selectable img-thumbnail" data-value="EXPAND" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Expand Links">
+			<img src="../img/toolbar/compress.png" class="stretching selectable img-thumbnail" data-value="COMPRESS" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Compress Links">
 		</div>	
-		<div class="col-md-12 text-right">
-			<div id="entityLegendPanelId" style="background-color: whitesmoke;border-bottom: 1px solid #ccc;"></div>
+		<div class="col-md-6 text-right">
+			<div id="entityLegendPanelId"></div>
 		</div>
+		<div class="col-md-12" style="border-bottom: 1px solid #ccc;"></div>
 	</div>
 	
 	<div id="network"/>
 </div>
 	
 <div id="contextMenu" class="dropdown clearfix"></div>
-
-<div id="i2NoticeId" title="Notice!" style="display: none">
-    <p>i2 Viewer only support 32-Bit Java JRE. If you do not have it, please use the 'i2 iXv (XML)' 
-    option to manually download and import you data.</p>
-</div>
-
-<div id="i2DisabledId" title="Notice!" style="display: none">
-    <p>Export to i2 is disabled after any subsequent search!</p>
-</div>
 
 <div id="colorLegendId" title="Data Source Colors" style="display: none">
 	<div id="colorLegendPanelId"></div>
@@ -240,6 +245,7 @@
 <script type="text/javascript" src="/js/bootstrap-toggle/bootstrap-toggle.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
 <script src="/js/primeui-2.0/primeui-2.0-min.js"></script>
+<script src="/js/bootbox/bootbox.min.js"></script>
 <script type="text/javascript" src="/js/utils.js"></script>
 <script type="text/javascript" src="/js/link-analysis.js"></script>
 
