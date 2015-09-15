@@ -1,3 +1,21 @@
+var ModalView = Backbone.View.extend({
+	el : $('#triggeredModal'),
+
+	modal : function (html) {
+		this.$el.find('.modal-content').html(html).end().modal();
+		if (!this.handleUndelegate) {
+			var that = this;
+			this.handleUndelegate = true;
+			this.$el.one('hidden.bs.modal', this.onClose.bind(this));
+		}
+	},
+
+	onClose : function () {
+		this.undelegateEvents();
+	}
+});
+
+
 var ALERT = {
 	error : function (txt, delay) {
 		this.msg(txt, 'danger', delay || 9000);

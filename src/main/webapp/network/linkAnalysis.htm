@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 <link href="/css/bootstrap-dropdown.css" rel="stylesheet" type="text/css">
 <link href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
+<link href="/js/select2/css/select2.min.css" rel="stylesheet" type="text/css" />
 <link href="network_files/bootstrap.min.css" rel="stylesheet" type="text/css">
 <link href="/js/primeui-2.0/themes/bootstrap/theme.css" rel="stylesheet" type="text/css" />
 <link href="/js/primeui-2.0/primeui-2.0-min.css" rel="stylesheet" type="text/css" />
@@ -102,7 +103,7 @@
 <div id="seeAlsoId">
 <table class="table table-bordered table-hover">
     <thead>
-		<tr>
+		<tr class="info">
 		    <th>Name</th>
 		    <th>Query</th>
 		</tr>
@@ -110,28 +111,28 @@
     <tbody>
 		{{#each seeAlso}}
 			{{#seeAlsoSingleTerm this}}
-				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.fielded }}}">
+				<tr class="bySeeAlso" data-see-also-query='{{{ queries.and.fielded }}}'>
 					<td>{{{ displayValue }}} (FIELDED)</td>
 					<td>{{{ queries.and.fielded }}}</td>
 				</tr>
-				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.unfielded }}}">
+				<tr class="bySeeAlso" data-see-also-query='{{{ queries.and.unfielded }}}'>
 					<td>{{{ displayValue }}} (UNFIELDED)</td>
 					<td>{{{ queries.and.unfielded }}}</td>
 				</tr>
 			{{else}}
-				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.fielded }}}">
+				<tr class="bySeeAlso" data-see-also-query='{{{ queries.and.fielded }}}'>
 					<td>{{{ displayValue }}} (FIELDED-AND)</td>
 					<td>{{{ queries.and.fielded }}}</td>
 				</tr>
-				<tr class="bySeeAlso" data-see-also-query="{{{ queries.or.fielded }}}">
+				<tr class="bySeeAlso" data-see-also-query='{{{ queries.or.fielded }}}'>
 					<td>{{{ displayValue }}} (FIELDED-OR)</td>
 					<td>{{{ queries.or.fielded }}}</td>
 				</tr>
-				<tr class="bySeeAlso" data-see-also-query="{{{ queries.and.unfielded }}}">
+				<tr class="bySeeAlso" data-see-also-query='{{{ queries.and.unfielded }}}'>
 					<td>{{{ displayValue }}} (UNFIELDED-AND)</td>
 					<td>{{{ queries.and.unfielded }}}</td>
 				</tr>
-				<tr class="bySeeAlso" data-see-also-query="{{{ queries.or.unfielded }}}">
+				<tr class="bySeeAlso" data-see-also-query='{{{ queries.or.unfielded }}}'>
 					<td>{{{ displayValue }}} (UNFIELDED-OR)</td>
 					<td>{{{ queries.or.unfielded }}}</td>
 				</tr>
@@ -144,21 +145,92 @@
 
 <script id="hb-rows" type="text/x-handlebars-template">
 	{{#each rows}}
-	<option value="{{this}}">{{this}}</option>
+		{{#ifEqual ../selectedValue this }}
+			<option SELECTED value="{{this}}">{{this}}</option>
+		{{else}}
+			<option value="{{this}}">{{this}}</option>
+		{{/ifEqual}}
 	{{/each}}
 </script>
 
 <script id="hb-filter-query" type="text/x-handlebars-template">
 	<option value="">Data Source</option>
 	{{#each ds}}
-	<option value="{{this.id}}">{{this.name}}</option>
+		{{#ifEqual ../selectedValue this.id }}
+			<option SELECTED value="{{this.id}}">{{this.name}}</option>
+		{{else}}
+				<option value="{{this.id}}">{{this.name}}</option>
+		{{/ifEqual}}
 	{{/each}}
 </script>
 
 <script id="hb-facets" type="text/x-handlebars-template">
 	{{#each facets}}
-	<option value="{{this.field}}">{{this.label}}</option>
+		{{#ifEqual ../selectedValue this.field }}
+			<option SELECTED value="{{this.field}}">{{this.label}}</option>
+		{{else}}
+			<option value="{{this.field}}">{{this.label}}</option>
+		{{/ifEqual}}
 	{{/each}}
+</script>
+
+<script type="text/x-handlebars-template" id="hb-link-analysis-snapshot">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+		<h4 class="modal-title">Link Analysis Snapshot</h4>
+	</div>
+	<div class="modal-body">
+		<form class="form-horizontal">
+			<fieldset>
+				<div class="form-group">
+					<label class="col-md-4 control-label" for="snapshot_name">Name</label>  
+					<div class="col-md-7">
+						<input id="snapshot_name" name="name" placeholder="Name (required)" class="form-control input-md" type="text"/>
+					</div>
+				</div>
+				
+				<!-- Textarea -->
+				<div class="form-group">
+					<label class="col-md-4 control-label" for="snapshot_description">Description</label>
+					<div class="col-md-7">
+						<textarea class="form-control static-size" id="snapshot_description" placeholder="Description" name="description"></textarea>
+					</div>
+				</div>				
+			</fieldset>						
+		</form>				
+	</div>
+	<div class="modal-footer">
+		<a href="#" id="snapshot_save_btn" class="btn btn-primary submit disabled" data-dismiss="modal">Save</a>
+		<a href="#" class="btn btn-default cancel" data-dismiss="modal">Cancel</a>
+	</div>
+</script>
+
+<script type="text/x-handlebars-template" id="hb-link-analysis-snapshot-list">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+		<h4 class="modal-title">Link Analysis Snapshots</h4>
+	</div>
+	<div class="modal-body">
+		<h5>Please select snapshot to load:</h5>
+		<fieldset>				
+		<form class="form-horizontal">
+			<ol class="list-group snapshot-list-items">
+			{{#each snapshots}}
+				<li class="list-group-item">
+					<a href="#" class="snapshot" title="{{this.attributes.description}}" data-snapshot="{{id}}">
+					<span>{{formatDate this.attributes.dateCreated}} </span>-
+					<span> {{this.attributes.label}}</span>
+					</a>					 
+					<a class="removeSnapshot pull-right" data-snapshot="{{id}}" title="remove snapshot" href="#"><i class="fa fa-trash" data-snapshot="{{id}}" ></i></a>
+				</li>
+			{{/each}}
+			</ol>								
+		</form>
+		</fieldset>		
+	</div>
+	<div class="modal-footer">		
+		<a href="#" class="btn btn-default cancel" data-dismiss="modal">Close</a>
+	</div>
 </script>
 
 <div id="content" class="content" style="background-color: whitesmoke;">
@@ -174,10 +246,10 @@
 				<div class="form-group" data-toggle="tooltip" title="Filters">
 					<select id="laFilterQuery" class="form-control input-sm"></select>
 				</div>
-				<div class="form-group" data-toggle="tooltip" title="# of rows">
+				<div class="form-group right" data-toggle="tooltip" title="# of rows">
 					<select id="laRows" class="form-control input-sm"></select>
 				</div>
-				<div class="form-group">
+				<div class="form-group right">
 					<button type="button" id="laSearchBtn" class="btn btn-primary btn-sm"><i class="fa fa-link"></i> Link</button>
 				</div>
 				<div class="btn-group">
@@ -187,6 +259,15 @@
 					<ul class="dropdown-menu">
 			            <li id="laI2ExportBtn"><a href="#"><i class="fa fa-eye"></i> i2 Viewer</a></li>
 				    	<li id="laI2XmlExportBtn"><a href="#"><i class="fa fa-file-code-o"></i> i2 iXv (XML)</a></li>
+					</ul>
+				</div>
+				<div class="btn-group">
+					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<i class="fa fa-camera"></i> Snapshots <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu">
+						<li id="snapshotSaveBtn"><a href="#"><i class="fa fa-save"></i> Save</a></li>
+			            <li id="snapshotListBtn"><a href="#"><i class="fa fa-list-alt"></i> List</a></li>				    	
 					</ul>
 				</div>
 			</form>
@@ -199,20 +280,28 @@
 			
 			<span class="right">&nbsp;</span>
 			
-			<img src="../img/toolbar/up-down.png" class="heirarchy selectable img-thumbnail" data-value="UD" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Up-Down">
-			<img src="../img/toolbar/down-up.png" class="heirarchy selectable img-thumbnail" data-value="DU" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Down-Up">
-			<img src="../img/toolbar/left-right.png" class="heirarchy selectable img-thumbnail" data-value="LR" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Left-Right">
-			<img src="../img/toolbar/right-left.png" class="heirarchy selectable img-thumbnail" data-value="RL" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Right-Left">
-			<img src="../img/toolbar/default-layout.png" class="heirarchy layoutDefault selectable img-thumbnail" data-value="DEFAULT" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Default">
+			<span>
+				<img src="../img/toolbar/up-down.png" class="heirarchy selectable img-thumbnail" data-value="UD" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Up-Down">
+				<img src="../img/toolbar/down-up.png" class="heirarchy selectable img-thumbnail" data-value="DU" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Down-Up">
+				<img src="../img/toolbar/left-right.png" class="heirarchy selectable img-thumbnail" data-value="LR" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Left-Right">
+				<img src="../img/toolbar/right-left.png" class="heirarchy selectable img-thumbnail" data-value="RL" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Right-Left">
+				<img src="../img/toolbar/default-layout.png" class="heirarchy layoutDefault selectable img-thumbnail" data-value="DEFAULT" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Default">
+			</span>
 			
 			<span class="right">&nbsp;</span>
 
 			<img id="laColorBtn" src="../img/toolbar/palette.png" class="selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Color Legend">
-
-			<span class="right">&nbsp;</span>
             
-			<img src="../img/toolbar/expand.png" class="stretching selectable img-thumbnail" data-value="EXPAND" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Expand Links">
-			<img src="../img/toolbar/compress.png" class="stretching selectable img-thumbnail" data-value="COMPRESS" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Compress Links">
+            <span class="links-resize">
+				<span class="right">&nbsp;</span>
+				<img src="../img/toolbar/expand.png" class="stretching selectable img-thumbnail" data-value="EXPAND" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Expand Links">
+				<img src="../img/toolbar/compress.png" class="stretching selectable img-thumbnail" data-value="COMPRESS" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Compress Links">
+			</span>
+			<span class="right">&nbsp;</span>
+            <span>
+				<img src="../img/toolbar/fullscreen.png" class="fullscreen screenDefault selectable img-thumbnail" data-value="true" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Full Screen">
+				<img src="../img/toolbar/fullscreen-exit.png" class="fullscreen selectable img-thumbnail" data-value="false" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Exit Full Screen">
+			</span>
 		</div>	
 		<div class="col-md-6 text-right">
 			<div id="entityLegendPanelId"></div>
@@ -220,7 +309,7 @@
 		<div class="col-md-12" style="border-bottom: 1px solid #ccc;"></div>
 	</div>
 	
-	<div id="network"/>
+	<div id="network"></div>
 </div>
 	
 <div id="contextMenu" class="dropdown clearfix"></div>
@@ -238,6 +327,8 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script src="http://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
 <script type="text/javascript" src="network_files/bootstrap.min.js"></script>
+<script src="/js/select2/js/select2.min.js"></script>
+<script src="/js/screenfull/screenfull.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-growl/1.0.0/jquery.bootstrap-growl.min.js"></script>
@@ -247,7 +338,13 @@
 <script src="/js/primeui-2.0/primeui-2.0-min.js"></script>
 <script src="/js/bootbox/bootbox.min.js"></script>
 <script type="text/javascript" src="/js/utils.js"></script>
-<script type="text/javascript" src="/js/link-analysis.js"></script>
+
+<script src="/js/link-analysis-helpers.js"></script>
+<script src="/js/link-analysis-highlight.js"></script>
+<script src="/js/link-analysis-listeners.js"></script>
+<script src="/js/link-analysis-mvc.js"></script>
+<script src="/js/link-analysis-utils.js"></script>
+<script src="/js/link-analysis.js"></script>
 
 </body>
 </html>
