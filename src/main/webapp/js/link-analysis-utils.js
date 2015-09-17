@@ -24,7 +24,7 @@ function getPostData(query, rows, filterQuery, facet) {
 	    "matchAll": true,
 	    "newSearch": true
 	};
-	if (_.isUndefined(filterQuery)) {
+	if (_.isUndefined(filterQuery) || filterQuery === "") {
 		postData.filterQuery = {};
 	} else {
 		postData.filterQuery = { "AFI__DOC_TYPE_t": [ filterQuery ] };
@@ -63,26 +63,20 @@ function search(postData) {
 	$.ajax({
 		type : "POST",
 		url : "/search/api/linkanalysis/documents",
-		async : false,
 		contentType:"application/json; charset=utf-8",
 		dataType : "json",
 		data : JSON.stringify(postData),
-		beforeSend: function() {
-			ALERT.status("Loading...");
-		},
 		error: function() {
-			var jsonData = linkAnalysisVar.loadAlready ? loadJson("/network/addedData.json") : loadJson("/network/data.json");
-			linkAnalysisVar.loadAlready = true;
+			var jsonData = loadJson("/network/addedData.json");
 			syncNetwork(jsonData);
+			linkAnalysisVar.network.stabilize();
 		},
 		success : function(jsonData) {
+			linkAnalysisVar.customLayout.improvedLayout = true;
 			syncNetwork(jsonData);
-		},
-		complete: function() {
-			ALERT.clearStatus();
+			linkAnalysisVar.network.stabilize();
 		}
-	});
-	linkAnalysisVar.i2Disabled = true;
+	});	
 }
 
 function syncNetwork(jsonData) {
@@ -227,7 +221,7 @@ function initDraw(nodes, edges) {
 	linkAnalysisVar.panelHeight = screenfull.isFullscreen
 		? getNetworkFullScreenSize()
 		: linkAnalysisVar.panelDefaultHeight;
-	linkAnalysisVar.customLayout = {};
+	linkAnalysisVar.customLayout = {}; // {improvedLayout: false};
 	linkAnalysisVar.heirarchy = $(".layoutDefault").data('value');
 	$(".heirarchy").siblings().css({
 		'background-color': linkAnalysisVar.deselectedColor

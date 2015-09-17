@@ -15,7 +15,6 @@ var linkAnalysisVar = {
 	resolveId: 1,
 	resolveNameId: 'resolveId',
 	mergePropertySeparator: '; ',
-	i2Disabled: false,
 	hoverColor: 'lime',
 	selectedColor: 'darkgray',
 	deselectedColor: 'transparent',
@@ -35,11 +34,12 @@ var linkAnalysisVar = {
 	edges: undefined,
 	nodesDeleted: undefined,
 	edgesDeleted: undefined,
-	network: undefined,
-	loadAlready: false
+	network: undefined
 };
 
 $(document).ready(function() {
+	var alertId = ALERT.status("Loading...");
+
 	var queryStr = getUrlVars();
 	
 	_.mapKeys(linkAnalysisVar.cssColors, function(value, key) {
@@ -65,27 +65,28 @@ $(document).ready(function() {
 	$.ajax({
 		type : "POST",
 		url : "/search/api/linkanalysis/documents",
-		async : false,
 		contentType:"application/json; charset=utf-8",
 		dataType : "json",
 		data : JSON.stringify(postData),
 		error: function() {
-			var jsonData = linkAnalysisVar.loadAlready ? loadJson("/network/addedData.json") : loadJson("/network/data.json");
-			linkAnalysisVar.loadAlready = true;
+			var jsonData = loadJson("/network/data.json");
 			initDraw(jsonData.nodes, jsonData.edges);
+			
+			ALERT.warning("Loaded " + linkAnalysisVar.nodes.length + " nodes.");
 		},
 		success: function(jsonData) {
 			initDraw(jsonData.nodes, jsonData.edges);
+			
+			if (linkAnalysisVar.nodes.length === 0) {
+				ALERT.warning("Data cannot be represented in the chart! Please try again.");
+			}
+		},
+		complete: function() {			
+			ALERT.clearStatus(alertId);
 		}
 	});
 
-	linkAnalysisVar.i2Disabled = false;
-
 	registerPageListeners();
-	
-	if (linkAnalysisVar.nodes.length === 0) {
-		ALERT.warning("Data cannot be represented in the chart! Please try again.");
-	}
 
 	$("#sidebarItemLinkAnalysis").css('display', 'inline');
 	

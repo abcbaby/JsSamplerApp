@@ -21,6 +21,8 @@ var LinkAnalysisSeeAlsoView = Backbone.View.extend({
 	selectSeeAlso: function(event) {
 		this.bootBoxModal.modal('hide');
 		
+		ALERT.status("Loading...");
+		
 		var query = $(event.currentTarget).data('see-also-query');
 		var rows = $('#laRows').val();
 		if (!validRows(rows)) {
@@ -31,7 +33,6 @@ var LinkAnalysisSeeAlsoView = Backbone.View.extend({
 		ALERT.info("Retrieving " + rows + " document(s) with query, " + query, linkAnalysisVar.statusTimeout);
 		
 		search(getPostData(query, rows, $("#laFilterQuery").val(), $("#laFacet").val()));
-		linkAnalysisVar.network.stabilize();
 	}
 });
 
@@ -79,12 +80,13 @@ var LinkAnalysisView = Backbone.View.extend({
 		}, function(){
 			$(this).css('background-color', linkAnalysisVar.freeze ? linkAnalysisVar.selectedColor: linkAnalysisVar.deselectedColor);
 		});
+		
 		this.render();
 	},
 	events : {
 		'click #laColorBtn' : 'colorLegend',
 		'click #laI2ExportBtn' : 'i2Export',
-		'click #laI2XmlExportBtn' : 'i2XmlExport',
+		'click #laI2VlxExportBtn' : 'i2Export',
 		'click #laClearBtn' : 'clear',
 		'click #laSearchBtn' : 'search',
 		'click .highlighting' : 'highlightClick',
@@ -112,38 +114,30 @@ var LinkAnalysisView = Backbone.View.extend({
 	    });
 		$('#colorLegendId').puidialog('show');
 	},
-	i2Export: function() {
-		if (linkAnalysisVar.i2Disabled) {
+	i2Export: function(event) {		
+		if (linkAnalysisVar.nodes.length == 0 && linkAnalysisVar.edges.length == 0) {
 			bootbox.dialog({
 				title: "Notice!",
-				message: "Export to i2 is disabled after any subsequent search!"
-			});
-		} else {
-			bootbox.dialog({
-				title: "Notice!",
-				message: "i2 Viewer only support 32-Bit Java JRE. If you do not have it, please use the 'i2 iXv (XML)' option to manually download and import you data.",
-				buttons: {
-					main: {
-						label: "OK",
-						className: "btn-primary",
-						callback: function() {
-		            		var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-		            		window.location.href = "/search/api/linkanalysis/i2export.jnlp?search=" + getUrlVars().origin;
-		            	}
-					}
-				}
+				message: "Please add nodes to export."
 			});
 		}
-	},
-	i2XmlExport: function() {
-		if (linkAnalysisVar.i2Disabled) {
-			bootbox.dialog({
-				title: "Notice!",
-				message: "Export to i2 is disabled after any subsequent search!"
+		else {
+			var action = $(event.target).data("action");			
+			var nodes = linkAnalysisVar.nodes.get({filter: function (item) {
+					return (!item.resolveId || item.resolveId === "") || (item.id && item.id.indexOf('resolveId') === 0);
+				}
 			});
-		} else {
-			var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1)
-			window.location.href = "/search/api/linkanalysis/i2download?search=" + getUrlVars().origin;
+			var edges = linkAnalysisVar.edges.get();			
+			var postData = {
+						label : "snapshot i2 export",
+						data : {"nodes" : nodes, "edges" : edges}
+					};
+
+			var formHtml = '<form id="i2ExportForm" method="POST" target="i2ExportFrame" action="/search/api/linkanalysis/' + action + '"><input type="hidden" name="snapshot"/></form>';
+			var form = $(formHtml);
+			$(form).find('input').val(JSON.stringify(postData));
+			$('body').append(form);
+			form.submit();
 		}
 	},
 	clear: function() {
@@ -265,6 +259,8 @@ var LinkAnalysisView = Backbone.View.extend({
 		if (qry == '') {
 			ALERT.info("Please enter a search", linkAnalysisVar.statusTimeout);
 		} else {
+			ALERT.status("Loading...");
+
 			var rows = linkAnalysisVar.laView.$el.find('#laRows').val();
 			if (!validRows(rows)) {
 				ALERT.error("Rows must be between 1 to " + linkAnalysisVar.maxRows + "!", linkAnalysisVar.statusTimeout);
@@ -279,8 +275,6 @@ var LinkAnalysisView = Backbone.View.extend({
 					rows, 
 					$("#laFilterQuery").val() , 
 					$("#laFacet").val()));
-			
-			linkAnalysisVar.network.stabilize();
 		}
 	},
 	render : function () {
@@ -368,9 +362,9 @@ var SaveSnapshotView = ModalView.extend({
 	},
 	saveSnapshot : function () {
 		console.log("SaveSnapshotView::saveSnapshot");
-				
-		var nodes = linkAnalysisVar.nodes._data;
-		var edges = linkAnalysisVar.edges._data;			
+			
+		var nodes = linkAnalysisVar.nodes.get();
+		var edges = linkAnalysisVar.edges.get();
 		var data = this.$el.find('form').serializeObject();
 		
 		this.model.clear();
@@ -379,7 +373,7 @@ var SaveSnapshotView = ModalView.extend({
 				"description" : data.description,
 				"data" : { "nodes" : nodes, "edges" : edges}				
 		});
-		ALERT.status("Saving ...");
+		ALERT.status("Saving...");
 		this.model.save()
 			.done( function (data) {					
 				ALERT.info("Save was successfully.");
@@ -416,7 +410,7 @@ var ListSnapshotView = ModalView.extend({
 	},
 	initialize : function() {
 		var that = this;
-		ALERT.status("Loading snapshots ...");
+		ALERT.status("Loading...");
 		this.model.fetch({complete : function (e) {
 			ALERT.clearStatus();
 			that.render();
@@ -428,7 +422,7 @@ var ListSnapshotView = ModalView.extend({
 	loadSnapshot : function (event) {
 		var selectedId = $(event.currentTarget).data('snapshot');
 		console.log("loadSnapshot id:" + selectedId);
-		ALERT.status("Loading ...");
+		ALERT.status("Loading...");
 		if (selectedId) {				
 			var snapshot = new LinkAnalysisSnapshotModel({id:selectedId});
 			snapshot.fetch().done(function() {
@@ -438,7 +432,6 @@ var ListSnapshotView = ModalView.extend({
 					var edges = data.edges;
 					if (nodes && edges) {
 						console.log("retrieved snapshot -> " + snapshot.get('label'));
-						linkAnalysisVar.i2Disabled = true;
 						initDraw(nodes, edges);
 					}
 				}
