@@ -2,9 +2,10 @@ function highlightNodes() {
 	selectNodesFromHighlight();
 	var curSelectedNodes = linkAnalysisVar.network.getSelectedNodes();
 	var allSelectedNodes = _.union(linkAnalysisVar.selectedNodes, curSelectedNodes);
+	// don't count nodes already resolved
 	var nodeIdsNotClusterd = _.filter(allSelectedNodes, function(nodeId) {
 		var node = linkAnalysisVar.nodes.get(nodeId);
-		return (_.isUndefined(node[linkAnalysisVar.resolveNameId]) || node[linkAnalysisVar.resolveNameId] == '') ? true : false;
+		return _.isUndefined(node[linkAnalysisVar.resolveNameId]) || node[linkAnalysisVar.resolveNameId] === '';
 	});
 	linkAnalysisVar.network.selectNodes(nodeIdsNotClusterd);
 	ALERT.info(nodeIdsNotClusterd.length + " item(s) selected.", linkAnalysisVar.statusTimeout);

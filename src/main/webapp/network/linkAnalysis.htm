@@ -235,7 +235,7 @@
 
 <div id="content" class="content" style="background-color: whitesmoke;">
 	<div id="manualSearch" class="row">
-		<div class="col-md-12 bg-info">
+		<div class="col-md-11 bg-info">
 			<form class="form-inline" style="display:inline" onsubmit="return false;">
 				<div class="form-group">
 					<input id="laSearchTxt" placeholder="Enter a search" class="form-control input-sm" size="40" type="text">
@@ -257,8 +257,8 @@
 						<i class="fa fa-download"></i> i2 Export <span class="caret"></span>
 					</button>
 					<ul class="dropdown-menu">
-			            <li id="laI2ExportBtn"><a href="#"><i class="fa fa-eye"></i> i2 Viewer</a></li>
-				    	<li id="laI2XmlExportBtn"><a href="#"><i class="fa fa-file-code-o"></i> i2 iXv (XML)</a></li>
+			            <li id="laI2ExportBtn"><a href="#" data-action="i2exportJnlp"><i class="fa fa-eye"></i> i2 Viewer</a></li>
+				    	<li id="laI2VlxExportBtn"><a href="#" data-action="i2exportVlx"><i class="fa fa-file-code-o"></i> i2 Export (VLX)</a></li>
 					</ul>
 				</div>
 				<div class="btn-group">
@@ -272,35 +272,38 @@
 				</div>
 			</form>
 		</div>
+		<div class="col-lg-1 bg-info text-right">
+			<button type="button" id="userGuideBtn" class="btn btn-info btn-sm" data-toggle="tooltip" title="Quick Reference Guide"><i class="fa fa-question-circle"></i></button>
+		</div>
 		<div class="col-md-12" style="border-bottom: 1px solid #ccc;"></div>
 		<div class="col-md-6 text-left">
-			<img id="laClearBtn" src="../img/toolbar/clear.png" class="selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Clear">
-			<img src="../img/toolbar/highlight.png" class="highlighting selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Highlight">
-			<img src="../img/toolbar/freeze.png" class="freezing selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Freeze">
+			<img id="laClearBtn" src="../img/toolbar/clear.png" class="selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Clear – Remove all the nodes, links and settings made to this chart. This allows the user to start over with a clean slate.">
+			<img src="../img/toolbar/highlight.png" class="highlighting selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Highlight - Select all the nodes by drawing a rectangle in a particular region within the chart.">
+			<img src="../img/toolbar/freeze.png" class="freezing selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Freeze - Stop all the nodes and links movement. This gives the user the ability to drag the nodes to anywhere in the chart they wish.">
 			
 			<span class="right">&nbsp;</span>
 			
 			<span>
-				<img src="../img/toolbar/up-down.png" class="heirarchy selectable img-thumbnail" data-value="UD" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Up-Down">
-				<img src="../img/toolbar/down-up.png" class="heirarchy selectable img-thumbnail" data-value="DU" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Down-Up">
-				<img src="../img/toolbar/left-right.png" class="heirarchy selectable img-thumbnail" data-value="LR" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Left-Right">
-				<img src="../img/toolbar/right-left.png" class="heirarchy selectable img-thumbnail" data-value="RL" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Right-Left">
-				<img src="../img/toolbar/default-layout.png" class="heirarchy layoutDefault selectable img-thumbnail" data-value="DEFAULT" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Default">
+				<img src="../img/toolbar/up-down.png" class="heirarchy selectable img-thumbnail" data-value="UD" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Up-Down - Change the layout to a Up-Down hierarchical layout.">
+				<img src="../img/toolbar/down-up.png" class="heirarchy selectable img-thumbnail" data-value="DU" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Down-Up - Change the layout to a Down-Up hierarchical layout.">
+				<img src="../img/toolbar/left-right.png" class="heirarchy selectable img-thumbnail" data-value="LR" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Left-Right - Change the layout to a Left-Right hierarchical layout.">
+				<img src="../img/toolbar/right-left.png" class="heirarchy selectable img-thumbnail" data-value="RL" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Right-Left - Change the layout to a Right-Left hierarchical layout.">
+				<img src="../img/toolbar/default-layout.png" class="heirarchy layoutDefault selectable img-thumbnail" data-value="DEFAULT" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Default - Let the system find the best way to display all the nodes and links.">
 			</span>
 			
 			<span class="right">&nbsp;</span>
 
-			<img id="laColorBtn" src="../img/toolbar/palette.png" class="selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Color Legend">
+			<img id="laColorBtn" src="../img/toolbar/palette.png" class="selectable img-thumbnail" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Color Legend - View all the Data Sources and the colors of links associated to them.">
             
             <span class="links-resize">
 				<span class="right">&nbsp;</span>
-				<img src="../img/toolbar/expand.png" class="stretching selectable img-thumbnail" data-value="EXPAND" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Expand Links">
-				<img src="../img/toolbar/compress.png" class="stretching selectable img-thumbnail" data-value="COMPRESS" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Compress Links">
+				<img src="../img/toolbar/expand.png" class="stretching selectable img-thumbnail" data-value="EXPAND" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Expand Links - When there are hundreds or thousands of nodes, they may be too tightly squeezed together. Expand all the links to separate the nodes.">
+				<img src="../img/toolbar/compress.png" class="stretching selectable img-thumbnail" data-value="COMPRESS" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Compress Links - Shorten all the links to pull the nodes closer together.">
 			</span>
 			<span class="right">&nbsp;</span>
             <span>
-				<img src="../img/toolbar/fullscreen.png" class="fullscreen screenDefault selectable img-thumbnail" data-value="true" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Full Screen">
-				<img src="../img/toolbar/fullscreen-exit.png" class="fullscreen selectable img-thumbnail" data-value="false" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Exit Full Screen">
+				<img src="../img/toolbar/fullscreen.png" class="fullscreen screenDefault selectable img-thumbnail" data-value="true" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Full Screen - View the chart in full screen mode. This gives more workspace of the chart for easy analysis.">
+				<img src="../img/toolbar/fullscreen-exit.png" class="fullscreen selectable img-thumbnail" data-value="false" data-toggle="tooltip" data-placement="bottom" width="32" height="32" title="Exit Full Screen - Restore back to user default browser window size.">
 			</span>
 		</div>	
 		<div class="col-md-6 text-right">
@@ -323,7 +326,16 @@
 <div id="propertiesDialogs"></div>
 
 <div id="i2ExportContainer" class="hide">
-	<iframe name="i2ExportFrame"></iframe>
+	<form id="i2ExportForm" method="POST" enctype='multipart/form-data'><input type="hidden" name="jsonData"/></form>
+</div>
+
+<div id="status" class="status-container hide" style="z-index:2000">
+	<div class="status-title"></div>
+	<div class="status-content"></div>
+	<div class="status-spinner">
+		<div class="fa-icon fa-spin fa-file-o-pdf"></div>
+		<div class="loader"></div>
+	</div>
 </div>
 
 <!--  NEED TO PUT THESE JS ON BOTTOM OF PAGE, OTHERWISE, BACKBONE.JS MAY NOT LOAD PROPERLY!!! -->

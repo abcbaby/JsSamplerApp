@@ -81,6 +81,8 @@ var LinkAnalysisView = Backbone.View.extend({
 			$(this).css('background-color', linkAnalysisVar.freeze ? linkAnalysisVar.selectedColor: linkAnalysisVar.deselectedColor);
 		});
 		
+		$('[data-toggle="tooltip"]').tooltip();
+		
 		this.render();
 	},
 	events : {
@@ -89,6 +91,7 @@ var LinkAnalysisView = Backbone.View.extend({
 		'click #laI2VlxExportBtn' : 'i2Export',
 		'click #laClearBtn' : 'clear',
 		'click #laSearchBtn' : 'search',
+		'click #userGuideBtn' : 'launchUserGuide',
 		'click .highlighting' : 'highlightClick',
 		'click .freezing' : 'freezeClick',
 		'mouseover .heirarchy' : 'heirarchyHover',
@@ -113,6 +116,8 @@ var LinkAnalysisView = Backbone.View.extend({
 	        modal: false
 	    });
 		$('#colorLegendId').puidialog('show');
+		
+		$('[data-toggle="tooltip"]').tooltip();
 	},
 	i2Export: function(event) {		
 		if (linkAnalysisVar.nodes.length == 0 && linkAnalysisVar.edges.length == 0) {
@@ -123,20 +128,19 @@ var LinkAnalysisView = Backbone.View.extend({
 		}
 		else {
 			var action = $(event.target).data("action");			
-			var nodes = linkAnalysisVar.nodes.get({filter: function (item) {
-					return (!item.resolveId || item.resolveId === "") || (item.id && item.id.indexOf('resolveId') === 0);
+			var nodes = linkAnalysisVar.nodes.get({
+				filter: function (item) {
+					return !(item.id && item.id.indexOf(linkAnalysisVar.resolveNameId) === 0);
 				}
 			});
 			var edges = linkAnalysisVar.edges.get();			
 			var postData = {
-						label : "snapshot i2 export",
-						data : {"nodes" : nodes, "edges" : edges}
+						network: {"nodes": nodes, "edges": edges}
 					};
 
-			var formHtml = '<form id="i2ExportForm" method="POST" target="i2ExportFrame" action="/search/api/linkanalysis/' + action + '"><input type="hidden" name="snapshot"/></form>';
-			var form = $(formHtml);
+			var form = $("#i2ExportForm");
+			$(form).attr('action', '/search/api/linkanalysis/' + action);
 			$(form).find('input').val(JSON.stringify(postData));
-			$('body').append(form);
 			form.submit();
 		}
 	},
@@ -263,6 +267,7 @@ var LinkAnalysisView = Backbone.View.extend({
 
 			var rows = linkAnalysisVar.laView.$el.find('#laRows').val();
 			if (!validRows(rows)) {
+				ALERT.clearStatus();
 				ALERT.error("Rows must be between 1 to " + linkAnalysisVar.maxRows + "!", linkAnalysisVar.statusTimeout);
 				return;
 			}
@@ -276,6 +281,9 @@ var LinkAnalysisView = Backbone.View.extend({
 					$("#laFilterQuery").val() , 
 					$("#laFacet").val()));
 		}
+	},
+	launchUserGuide: function() {
+		window.location = "/static/html/LinkAnalysis-QRG.docx";
 	},
 	render : function () {
 		//this.$el.find('#laSearchTxt').val(this.model.get('query'));
@@ -295,8 +303,8 @@ var LinkAnalysisView = Backbone.View.extend({
 		this.$el.find('#laRows').html(compiledHtml);
 		
 		$("#laRows").select2({
-			maximumInputLength: 3,
-			width: 60,
+			maximumInputLength: 4,
+			width: 65,
 			multiple: false,
 			tags: true,
 			matcher: function(params, text) {
@@ -325,7 +333,7 @@ var LinkAnalysisSnapshotModel = Backbone.Model.extend({
 			description : "",
 			dateCreated : null,
 			userName : "",
-			data : {}			
+			network : {}			
 		};
 	}
 });
@@ -369,21 +377,24 @@ var SaveSnapshotView = ModalView.extend({
 		
 		this.model.clear();
 		this.model.set({ 
-				"label" : data.name, 
-				"description" : data.description,
-				"data" : { "nodes" : nodes, "edges" : edges}				
+				"label": data.name, 
+				"description": data.description,
+				"mapData": {"nodes": nodes, "edges": edges}			
 		});
 		ALERT.status("Saving...");
-		this.model.save()
-			.done( function (data) {					
-				ALERT.info("Save was successfully.");
-				ALERT.clearStatus();
+		this.model.save(null, {
+			success: function (data) {					
+				ALERT.info("Save was successful.");
 				if (data && data.success && data.success == false) {
 					ALERT.error(data.message ? data.message : "Error occuring while saving snapshot.  Contact support if problem persists.");
 				}
-			})
-			.fail( function(resp) {
-				ALERT.error("Error occuring while saving snapshot.  Contact support if problem persists.");
+			},
+			error: function(resp) {
+				ALERT.error("Error occuring while saving snapshot. Your session may have timed out.");
+			},
+			done: function() {
+				ALERT.clearStatus();
+			}
 		});			
 	},
 	onSubmit : function(event) {
@@ -411,10 +422,16 @@ var ListSnapshotView = ModalView.extend({
 	initialize : function() {
 		var that = this;
 		ALERT.status("Loading...");
-		this.model.fetch({complete : function (e) {
-			ALERT.clearStatus();
-			that.render();
-		}});		
+		this.model.fetch({
+			success : function (e) {
+				ALERT.clearStatus();
+				that.render();
+			},
+			error: function(e) {
+				ALERT.clearStatus();
+				ALERT.error("Error trying to load snapshot. Your session may have timed out.")
+			}
+		});		
 	},
 	render : function () {
 		this.modal(this.template({"snapshots" : this.model.models}));
@@ -426,10 +443,11 @@ var ListSnapshotView = ModalView.extend({
 		if (selectedId) {				
 			var snapshot = new LinkAnalysisSnapshotModel({id:selectedId});
 			snapshot.fetch().done(function() {
-				if (snapshot.get('data')) {
-					var data = snapshot.get('data');
-					var nodes = data.nodes;
-					var edges = data.edges;
+				if (snapshot.get('network')) {
+					var networkStr = snapshot.get('network');
+					var network = JSON.parse(networkStr);
+					var nodes = network.nodes;
+					var edges = network.edges;
 					if (nodes && edges) {
 						console.log("retrieved snapshot -> " + snapshot.get('label'));
 						initDraw(nodes, edges);

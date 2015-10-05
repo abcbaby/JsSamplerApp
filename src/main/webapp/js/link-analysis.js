@@ -2,7 +2,7 @@ var linkAnalysisVar = {
 	cssColors: loadJson("/js/css-color-names.json"),
 	colors: [],
 	entityList: [],
-	maxRows: 500,
+	maxRows: 1000,
 	minEdgeLength: 200,
 	maxEdgeLength: 1000,
 	edgeStep: 50,
@@ -68,18 +68,18 @@ $(document).ready(function() {
 		contentType:"application/json; charset=utf-8",
 		dataType : "json",
 		data : JSON.stringify(postData),
-		error: function() {
-			var jsonData = loadJson("/network/data.json");
-			initDraw(jsonData.nodes, jsonData.edges);
-			
-			ALERT.warning("Loaded " + linkAnalysisVar.nodes.length + " nodes.");
-		},
 		success: function(jsonData) {
 			initDraw(jsonData.nodes, jsonData.edges);
 			
 			if (linkAnalysisVar.nodes.length === 0) {
 				ALERT.warning("Data cannot be represented in the chart! Please try again.");
 			}
+		},
+		error: function() {
+			var jsonData = loadJson("/network/data.json");
+			initDraw(jsonData.nodes, jsonData.edges);
+			
+			ALERT.warning("Loaded " + linkAnalysisVar.nodes.length + " nodes.");
 		},
 		complete: function() {			
 			ALERT.clearStatus(alertId);

@@ -67,6 +67,7 @@ function search(postData) {
 		dataType : "json",
 		data : JSON.stringify(postData),
 		error: function() {
+			//ALERT.error("Error trying to retrieve data. Session may have expired.")
 			var jsonData = loadJson("/network/addedData.json");
 			syncNetwork(jsonData);
 			linkAnalysisVar.network.stabilize();
@@ -212,16 +213,44 @@ function hexToRgb(hex) {
     } : null;
 }
 
+function updateResolvedId(nodes) {
+	var resolvedNodes = _.filter(nodes, function(item) {
+		return (item.id && item.id.indexOf(linkAnalysisVar.resolveNameId) === 0);
+	});
+	
+	if (resolvedNodes.length > 0) {
+		var lastResolvedId = 0;
+		_.forEach(resolvedNodes, function(item) {
+			var num = parseInt(item.id.substring(linkAnalysisVar.resolveNameId.length));
+			if (num > linkAnalysisVar.resolveId) {
+				lastResolvedId =  num;
+			}
+		});
+		
+		linkAnalysisVar.resolveId = lastResolvedId + 1;
+	}
+}
+
 function initDraw(nodes, edges) {
+	linkAnalysisVar.resolveId = 1;
 	linkAnalysisVar.nodes = new vis.DataSet([]);
 	linkAnalysisVar.edges = new vis.DataSet([]);
 	linkAnalysisVar.nodesDeleted = new vis.DataSet([]);
 	linkAnalysisVar.edgesDeleted = new vis.DataSet([]);
 	linkAnalysisVar.dsColors = [];
+	linkAnalysisVar.customLayout = {};
 	linkAnalysisVar.panelHeight = screenfull.isFullscreen
 		? getNetworkFullScreenSize()
 		: linkAnalysisVar.panelDefaultHeight;
-	linkAnalysisVar.customLayout = {}; // {improvedLayout: false};
+	
+	if (nodes || edges) {	
+		updateResolvedId(nodes); // reset last resolveId
+		syncNetwork({'nodes':nodes, 'edges':edges});			
+	}
+
+	refresh();
+	
+	// refresh tools palette
 	linkAnalysisVar.heirarchy = $(".layoutDefault").data('value');
 	$(".heirarchy").siblings().css({
 		'background-color': linkAnalysisVar.deselectedColor
@@ -231,18 +260,11 @@ function initDraw(nodes, edges) {
 	});
 	$(".fullscreen").siblings().hide();
 	$(".screenDefault").show();
-	
-	if (nodes || edges) {			
-		syncNetwork({'nodes':nodes, 'edges':edges});			
-	}
-	
-	refresh();
 }
 
 function refresh() {
 	draw();
 	// put all cluster nodes back
-	var allNodes = linkAnalysisVar.nodes.get();
 	for (var i = 1; i <= linkAnalysisVar.resolveId; i++) {
 		var rId = createResolveId(i);
 		var c = linkAnalysisVar.nodes.get(rId);
@@ -250,6 +272,18 @@ function refresh() {
 			loadCluster(c);
 		}
 	}
+
+	// set back to original state for highlight & freeze when loading from saved charts
+	linkAnalysisVar.network.setOptions({
+		interaction: { 
+			dragView: !linkAnalysisVar.highlighting, 
+			dragNodes: !linkAnalysisVar.highlighting,
+			hideEdgesOnDrag: !linkAnalysisVar.highlighting
+		},
+		physics: {
+			enabled: !linkAnalysisVar.freeze
+		}
+	});
 }
 
 function draw() {
@@ -263,6 +297,14 @@ function draw() {
 	    	navigationButtons: true
 	    },
 	    nodes: {
+	    	borderWidthSelected: 2,
+	    	color: {
+	    		border: 'transparent',
+    	        background: 'transparent',
+	        	highlight: {
+	    	        background: 'transparent'
+    	        }
+    	    },
 	        scaling: {
 	            label: {
 	                min: 8,
@@ -271,10 +313,22 @@ function draw() {
 	                maxVisible: 20
 	            }
 	        },
-	    	shadow: true
+	    	shadow: true,
+	    	shapeProperties: {
+	    		borderDashes: [10, 2], // only for borders
+	    		useBorderWithImage: true  // only for image shape
+    	    }
 	    },
         edges: {
-            smooth: {
+        	arrows: {
+        		to: {
+        			scaleFactor: 0.5
+        		}
+    	    },
+    	    font: {
+  			  align: "middle"
+  			},
+    	    smooth: {
             	type: 'continuous'
             },
 			length: linkAnalysisVar.edgeLength
@@ -407,7 +461,11 @@ function reCluster() {
 		});
 		if (c.length === 1) {
 			var clusterNode = c[0];
-			linkAnalysisVar.network.openCluster(clusterNode.id);
+			try {
+				linkAnalysisVar.network.openCluster(clusterNode.id);
+			} catch(err) {
+				// it is expected that errors will be thrown if loading from saved charts
+			}
 			
 			loadCluster(clusterNode);			
 		}
@@ -429,7 +487,27 @@ function isUnfielded(txt) {
 }
 
 function createResolveId(resolveId) {
-	return 'resolveId-' + resolveId;	
+	return linkAnalysisVar.resolveNameId + resolveId;	
+}
+
+// recursively find all children node ID from list of nodes
+function getChildrenNodeIds(nodes) {
+	var childrenNodes = [];
+	var tmpNodes;
+	_.forEach(nodes, function(item) {
+		childrenNodes.push(item.id);
+    	if (item.id.indexOf(linkAnalysisVar.resolveNameId) === 0) {
+    		var directChildrenNodes = linkAnalysisVar.nodes.get({
+    			filter: function (it) {
+    				return (!_.isUndefined(it[linkAnalysisVar.resolveNameId]) && it[linkAnalysisVar.resolveNameId] === item.id);
+    			}
+			});
+
+    		childrenNodes = childrenNodes.concat(getChildrenNodeIds(directChildrenNodes));
+    	}
+	});
+		
+	return childrenNodes;
 }
 
 function removeSelectedNodes() {
@@ -447,18 +525,26 @@ function removeSelectedNodes() {
 					label : "OK",
 					className : "btn-primary",
 					callback : function() {
-		            	var selection = linkAnalysisVar.network.getSelection();
-		            	// somehow some selection may have null values, so remove it
-		            	var selectedNodes = _.filter(linkAnalysisVar.nodes.get(selection.nodes), function(item) {
-		            		return item != null;
+		            	var selection = linkAnalysisVar.network.getSelection();		            	
+		            	var selectedNodes = linkAnalysisVar.nodes.get(selection.nodes)
+		            	
+		            	var selectedChildrenNodeIds = getChildrenNodeIds(selectedNodes);
+		            	var deletedChildrenNodes = linkAnalysisVar.nodes.get(selectedChildrenNodeIds);
+		            	var deletedChildrenEdges = _.filter(linkAnalysisVar.edges.get(), function(item) {
+		            		var deleteEdge = _.find(selectedChildrenNodeIds, function(it) {
+		            			return it === item.from || it === item.to;
+		            		});
+		            		return !_.isUndefined(deleteEdge);
 		            	});
-		            	var selectedEdges = _.filter(linkAnalysisVar.edges.get(selection.edges), function(item) {
-		            		return item != null;
-		            	});
-		            	linkAnalysisVar.nodesDeleted.update(selectedNodes);
-		            	linkAnalysisVar.edgesDeleted.update(selectedEdges);
-		            	linkAnalysisVar.nodes.remove(selection.nodes);
-		            	linkAnalysisVar.edges.remove(selection.edges);
+						var selectedChildrenEdgeIds = [];
+						_.forEach(deletedChildrenEdges, function(item) {
+							selectedChildrenEdgeIds.push(item.id);
+						});
+
+		            	linkAnalysisVar.nodesDeleted.update(deletedChildrenNodes);
+		            	linkAnalysisVar.edgesDeleted.update(deletedChildrenEdges);
+		            	linkAnalysisVar.nodes.remove(selectedChildrenNodeIds);
+		            	linkAnalysisVar.edges.remove(selectedChildrenEdgeIds);
 		            	
 		            	// update entity legend
 		            	var newEntityList = _.remove(linkAnalysisVar.entityList, function(entity) {

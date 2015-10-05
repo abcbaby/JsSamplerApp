@@ -39,7 +39,7 @@ var ALERT = {
 			delay : delay || 6000,
 			offset : {
 				from : 'top',
-				amount : '80'
+				amount : '110'
 			},
 			width : 'auto'
 
@@ -54,32 +54,40 @@ var ALERT = {
 		}
 	},
 	
+	_statusId: 0,
+	
 	status : function (title, message, spin) {
 		$('#status').removeClass('hide')
 		.find('.status-title').text(title ? title : '').end()
 		.find('.status-content').text(message ?  message : '').end()
 		.find('.status-spinner')[spin===false ? 'addClass' : 'removeClass']('hide');
+		return ++this._statusId;
 	},
 
-	clearStatus : function() {
-		$('#status').addClass('hide');
+	clearStatus : function(id) {
+		if(id === undefined || id === this._statusId) {
+			$('#status').addClass('hide');
+			return true;
+		}
+		return false;
 	},
 	
 	timeoutStatus : function (timeout, title, message, spin) {
-		ALERT.status(title, message, spin);
+		var id = ALERT.status(title, message, spin);
 		return setTimeout(function() {
-			ALERT.clearStatus();
+			ALERT.clearStatus(id);
 		}, timeout || 0);
 	},
 	
 	statusOnXHR : function(xhrs, title, message, timeout, error) {
+		var id;
 		try{
 			timeout = timeout >= 0 ? timeout : 750;
 			var wait = $.when.apply($, xhrs);
 			var to = setTimeout(function(){
-				ALERT.status(title);
+				id = ALERT.status(title);
 				wait.done(ALERT.clearStatus).fail(function(){
-					ALERT.clearStatus();
+					ALERT.clearStatus(id);
 					if(error){
 						ALERT.error(error);
 					}
@@ -89,7 +97,7 @@ var ALERT = {
 				clearTimeout(to);
 			});
 		} catch (e) {
-			ALERT.clearStatus();
+			ALERT.clearStatus(id !== undefined ? id : -1);
 		}
 	}
 };
