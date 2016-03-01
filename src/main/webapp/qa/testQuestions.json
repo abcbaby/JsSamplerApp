@@ -1,0 +1,24 @@
+[{
+	"question": "Who is the first U.S. President?",
+	"answer": "George Washington",
+	"choices": ["George Washington",
+	"Thomas Jefferson",
+	"Barack Obama",
+	"John Adam"]
+},
+{
+	"question": "Who is the current U.S. President?",
+	"answer": "Barack Obama",
+	"choices": ["George Washington",
+	"Thomas Jefferson",
+	"Barack Obama",
+	"John Adam"]
+},
+{
+	"question": "What is the first 10 Amendments called?",
+	"answer": "Bill of Rights",
+	"choices": ["Bill of Rights",
+	"Bill of Wrong",
+	"U.S. Constitution",
+	"Declaration of Independence"]
+}]

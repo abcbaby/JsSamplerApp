@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Test Questions</title>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+	<style>
+	.choice {
+	    text-indent: 25px;
+	}
+	.fa-check {
+		color: green;
+	}
+	.fa-remove {
+		color: red;
+	}
+	</style>
+	<script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.5.1/lodash.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone-min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+	<script>
+		var QuestionAnswerView = Backbone.View.extend({
+			questionArray : null,
+			el : ".container",
+			initialize : function() {
+				var that = this;
+				$.ajax({
+					type : "POST",
+					url : './testQuestions.json',
+					contentType:"application/json; charset=utf-8",
+					dataType : "json",
+					//data : JSON.stringify(postData),
+					success : function(data) {
+						that.questionArray = _.shuffle(data);
+						_(that.questionArray).forEach(function(question) {
+							question.choices = _.shuffle(question.choices);
+						});
+						that.render(that.questionArray);
+					},
+					error : function (data) {
+						alert('Error retrieving data from: ' + this.url);
+					}
+				});
+			},
+			events : {
+				'click .choiceAnswer' : 'checkAnswer',
+			},
+			checkAnswer: function(event) {
+				var inputName = $(event.currentTarget).attr("name");
+				var value = $(event.currentTarget).val();
+
+				var questNum = parseInt(inputName);
+				var qa = this.questionArray[questNum];
+
+				if (qa.answer === value) {
+					this.$el.find('.iconAnswer' + questNum).html('<i class="fa fa-check"></i>');
+				} else {
+					this.$el.find('.iconAnswer' + questNum).html('<i class="fa fa-remove"></i>');
+				}
+			},
+			render : function (questionArray) {
+				var content  = {
+					questionArray: questionArray
+				};
+				var template = Handlebars.compile($('#hb-question-entry').html());
+				var compiledHtml = template(content);
+				this.$el.find('#questionaire').html(compiledHtml);
+			}
+		});
+
+		$(document).ready(function() {
+			var questionAnswerView = new QuestionAnswerView();
+		});
+	</script>
+
+</head>
+
+<div class="container">
+  <h2>U.S. History Questionaire</h2>
+  <form id="questionaire" role="form">
+  </form>
+</div>
+
+<script id="hb-question-entry" type="text/x-handlebars-template">
+	{{#each questionArray}}
+	<div class="form-group">
+		<label>{{ this.question }} <span class="iconAnswer{{@index}}"></span></label>
+		{{#each this.choices}}
+			<div class="radio choice">
+				<label><input name="{{@../index}}" class="choiceAnswer" type="radio" value="{{ this }}">{{ this }}</label>
+			</div>
+		{{/each}}
+	</div>
+	{{/each}}
+</script>
+</body>
+</html>
