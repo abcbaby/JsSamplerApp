@@ -56,11 +56,14 @@
 				var questNum = parseInt(inputName);
 				var qa = this.questionArray[questNum];
 
+				var result;
 				if (qa.answer === value) {
-					this.$el.find('.iconAnswer' + questNum).html('<i class="fa fa-check"></i>');
+					result = '<a href="#" data-toggle="tooltip" data-placement="right" title="Correct!"><i class="fa fa-check fa-2x"></i></a>';
 				} else {
-					this.$el.find('.iconAnswer' + questNum).html('<i class="fa fa-remove"></i>');
+					result = '<a href="#" data-toggle="tooltip" data-placement="right" title="' + value + ' is incorrect. Try again."><i class="fa fa-remove fa-2x"></i></a>';
 				}
+				this.$el.find('.iconAnswer' + questNum).html(result);
+				$('[data-toggle="tooltip"]').tooltip();
 			},
 			render : function (questionArray) {
 				var content  = {

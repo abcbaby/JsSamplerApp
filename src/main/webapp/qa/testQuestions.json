@@ -15,6 +15,14 @@
 	"John Adam"]
 },
 {
+	"question": "When is Lippy b-day?",
+	"answer": "5/4/2008",
+	"choices": ["5/4/2004",
+	"5/4/2008",
+	"4/2/2004",
+	"1/1/2002"]
+},
+{
 	"question": "What is the first 10 Amendments called?",
 	"answer": "Bill of Rights",
 	"choices": ["Bill of Rights",

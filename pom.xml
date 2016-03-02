@@ -207,7 +207,7 @@
 				<version>2.3</version>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
-					<outputDirectory>C:\jenkins\workspace\TestApp</outputDirectory>
+					<outputDirectory>.\war</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
