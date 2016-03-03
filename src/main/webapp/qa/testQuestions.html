@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 	<style>
 	.choice {
-	    text-indent: 25px;
+	    text-indent: 10px;
 	}
 	.fa-check {
 		color: green;
@@ -58,11 +58,13 @@
 
 				var result;
 				if (qa.answer === value) {
-					result = '<a href="#" data-toggle="tooltip" data-placement="right" title="Correct!"><i class="fa fa-check fa-2x"></i></a>';
+					result = '<a href="#" data-toggle="tooltip" data-placement="right" title="Correct!"><i class="fa fa-check"></i></a>';
 				} else {
-					result = '<a href="#" data-toggle="tooltip" data-placement="right" title="' + value + ' is incorrect. Try again."><i class="fa fa-remove fa-2x"></i></a>';
+					result = '<a href="#" data-toggle="tooltip" data-placement="right" title="Incorrect. Try again."><i class="fa fa-remove"></i></a>';
 				}
-				this.$el.find('.iconAnswer' + questNum).html(result);
+				var ansIdx = _.indexOf(qa.choices, value);
+				var id = createId(questNum, ansIdx);
+				this.$el.find('.iconAnswer' + id).html(result);
 				$('[data-toggle="tooltip"]').tooltip();
 			},
 			render : function (questionArray) {
@@ -73,6 +75,14 @@
 				var compiledHtml = template(content);
 				this.$el.find('#questionaire').html(compiledHtml);
 			}
+		});
+		
+		function createId(idx, ansIdx) {
+			return idx + "-" + ansIdx;
+		}
+		
+		Handlebars.registerHelper('createId', function(idx, ans) {
+			return createId(idx, ans);
 		});
 
 		$(document).ready(function() {
@@ -89,16 +99,14 @@
 </div>
 
 <script id="hb-question-entry" type="text/x-handlebars-template">
-	{{#each questionArray}}
-	<div class="form-group">
-		<label>{{ this.question }} <span class="iconAnswer{{@index}}"></span></label>
-		{{#each this.choices}}
-			<div class="radio choice">
-				<label><input name="{{@../index}}" class="choiceAnswer" type="radio" value="{{ this }}">{{ this }}</label>
-			</div>
-		{{/each}}
+{{#each questionArray}}
+	<label>{{ this.question }}</label>
+	{{#each this.choices}}
+	<div class="radio choice">
+		<label><input name="{{ @../index }}" class="choiceAnswer" type="radio" value="{{ this }}">{{ this }}</label><span class="iconAnswer{{ createId @../index @index }}"></span>
 	</div>
 	{{/each}}
+{{/each}}
 </script>
 </body>
 </html>
