@@ -15,6 +15,10 @@
 	.fa-remove {
 		color: red;
 	}
+	label.answer:hover {
+	    background-color: yellow;
+	    font-weight: bold;
+	} 
 	</style>
 	<script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.5.1/lodash.min.js"></script>
@@ -62,6 +66,10 @@
 				} else {
 					result = '<a href="#" data-toggle="tooltip" data-placement="right" title="Incorrect. Try again."><i class="fa fa-remove"></i></a>';
 				}
+
+				// clear all answers
+				this.$el.find('.iconAnswer' + questNum).html('');
+
 				var ansIdx = _.indexOf(qa.choices, value);
 				var id = createId(questNum, ansIdx);
 				this.$el.find('.iconAnswer' + id).html(result);
@@ -85,6 +93,10 @@
 			return createId(idx, ans);
 		});
 
+		Handlebars.registerHelper('counter', function(idx) {
+			return idx + 1;
+		});
+		
 		$(document).ready(function() {
 			var questionAnswerView = new QuestionAnswerView();
 		});
@@ -100,10 +112,12 @@
 
 <script id="hb-question-entry" type="text/x-handlebars-template">
 {{#each questionArray}}
-	<label>{{ this.question }}</label>
+	<label>{{ counter @index }}. {{ this.question }}</label>
 	{{#each this.choices}}
 	<div class="radio choice">
-		<label><input name="{{ @../index }}" class="choiceAnswer" type="radio" value="{{ this }}">{{ this }}</label><span class="iconAnswer{{ createId @../index @index }}"></span>
+		<label class="answer">
+			<input name="{{ @../index }}" class="choiceAnswer" type="radio" value="{{ this }}">{{ this }}
+		</label><span class="iconAnswer{{ @../index}} iconAnswer{{ createId @../index @index }}"></span>
 	</div>
 	{{/each}}
 {{/each}}
