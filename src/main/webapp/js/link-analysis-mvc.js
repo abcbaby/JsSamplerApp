@@ -5,7 +5,7 @@ var LinkAnalysisModel = Backbone.Model.extend({
         rows: "10",
         filterQuery: "",
     	facetField: ""
-    },    
+    },
 });
 
 var LinkAnalysisSeeAlsoView = Backbone.View.extend({
@@ -20,18 +20,18 @@ var LinkAnalysisSeeAlsoView = Backbone.View.extend({
 	},
 	selectSeeAlso: function(event) {
 		this.bootBoxModal.modal('hide');
-		
+
 		ALERT.status("Loading...");
-		
+
 		var query = $(event.currentTarget).data('see-also-query');
 		var rows = $('#laRows').val();
 		if (!validRows(rows)) {
 			ALERT.error("Rows must be between 1 to " + linkAnalysisVar.maxRows + "!", linkAnalysisVar.statusTimeout);
 			return;
 		}
-		
+
 		ALERT.info("Retrieving " + rows + " document(s) with query, " + query, linkAnalysisVar.statusTimeout);
-		
+
 		search(getPostData(query, rows, $("#laFilterQuery").val(), $("#laFacet").val()));
 	}
 });
@@ -80,9 +80,9 @@ var LinkAnalysisView = Backbone.View.extend({
 		}, function(){
 			$(this).css('background-color', linkAnalysisVar.freeze ? linkAnalysisVar.selectedColor: linkAnalysisVar.deselectedColor);
 		});
-		
+
 		$('[data-toggle="tooltip"]').tooltip();
-		
+
 		this.render();
 	},
 	events : {
@@ -90,6 +90,7 @@ var LinkAnalysisView = Backbone.View.extend({
 		'click #laI2ExportBtn' : 'i2Export',
 		'click #laI2VlxExportBtn' : 'i2Export',
 		'click #laClearBtn' : 'clear',
+		'click #findBtn' : 'findNodes',
 		'click #laSearchBtn' : 'search',
 		'click #userGuideBtn' : 'launchUserGuide',
 		'click .highlighting' : 'highlightClick',
@@ -104,22 +105,17 @@ var LinkAnalysisView = Backbone.View.extend({
 	},
 	colorLegend: function() {
 		updateColorLegend();
-		
-		$('#colorLegendId').puidialog({
+
+		$("#colorLegendId").dialog({
+			show: {effect: 'fade'},
+			hide: {effect: 'fade'},
 			width: 300,
 			height: 200,
-	        resizable: true,
-	        minimizable: false,
-	        maximizable: false,
-	        draggable: true,
-	        responsive: true,
-	        modal: false
-	    });
-		$('#colorLegendId').puidialog('show');
-		
+		});
+
 		$('[data-toggle="tooltip"]').tooltip();
 	},
-	i2Export: function(event) {		
+	i2Export: function(event) {
 		if (linkAnalysisVar.nodes.length == 0 && linkAnalysisVar.edges.length == 0) {
 			bootbox.dialog({
 				title: "Notice!",
@@ -127,13 +123,13 @@ var LinkAnalysisView = Backbone.View.extend({
 			});
 		}
 		else {
-			var action = $(event.target).data("action");			
+			var action = $(event.target).data("action");
 			var nodes = linkAnalysisVar.nodes.get({
 				filter: function (item) {
 					return !(item.id && item.id.indexOf(linkAnalysisVar.resolveNameId) === 0);
 				}
 			});
-			var edges = linkAnalysisVar.edges.get();			
+			var edges = linkAnalysisVar.edges.get();
 			var postData = {
 						network: {"nodes": nodes, "edges": edges}
 					};
@@ -145,10 +141,33 @@ var LinkAnalysisView = Backbone.View.extend({
 		}
 	},
 	clear: function() {
-		initDraw();		
+		initDraw();
 		updateColorLegend();
 		linkAnalysisVar.entityList = [];
 		updateEntityLegend();
+	},
+	findNodes: function() {
+		bootbox.prompt({
+			title : "Find all nodes containing:",
+			callback : function(result) {
+				if (result !== null) {
+					var matchedNodeIds = [];
+					var allNodes = linkAnalysisVar.nodes.get();
+					_.forEach(allNodes, function(item) {
+						if (item.label.toLowerCase().indexOf(result.toLowerCase()) > -1) {
+							matchedNodeIds.push(item.id);
+						}
+					});
+
+					if (_.isEmpty(matchedNodeIds)) {
+						ALERT.info("No result containing '" + result + "'. Try again.");
+					} else {
+						linkAnalysisVar.network.selectNodes(matchedNodeIds);
+						linkAnalysisVar.network.focus(matchedNodeIds[0]);
+					}
+				}
+			}
+		});
 	},
 	highlightClick: function(e) {
 		linkAnalysisVar.highlighting = !linkAnalysisVar.highlighting;
@@ -156,13 +175,13 @@ var LinkAnalysisView = Backbone.View.extend({
 			'background-color': linkAnalysisVar.highlighting ? linkAnalysisVar.selectedColor : linkAnalysisVar.deselectedColor
 		});
 		linkAnalysisVar.network.setOptions({
-			interaction: { 
-				dragView: !linkAnalysisVar.highlighting, 
+			interaction: {
+				dragView: !linkAnalysisVar.highlighting,
 				dragNodes: !linkAnalysisVar.highlighting,
 				hideEdgesOnDrag: !linkAnalysisVar.highlighting
 			}
 		});
-		
+
 		if (linkAnalysisVar.highlighting) {
 			$(".freezing").hide();
 		} else {
@@ -179,7 +198,7 @@ var LinkAnalysisView = Backbone.View.extend({
 				enabled: !linkAnalysisVar.freeze
 			}
 		});
-		
+
 		if(linkAnalysisVar.freeze) {
 			$(".links-resize").hide();
 		} else {
@@ -214,14 +233,14 @@ var LinkAnalysisView = Backbone.View.extend({
 		if (linkAnalysisVar.freeze) {
 			ALERT.warning("This feature is disabled!");
 		} else {
-			linkAnalysisVar.edgeLength = stretchValue === "EXPAND" 
+			linkAnalysisVar.edgeLength = stretchValue === "EXPAND"
 				? (linkAnalysisVar.edgeLength + linkAnalysisVar.edgeStep)
 				: (linkAnalysisVar.edgeLength - linkAnalysisVar.edgeStep);
 			if (linkAnalysisVar.edgeLength >= linkAnalysisVar.minEdgeLength && linkAnalysisVar.edgeLength <= linkAnalysisVar.maxEdgeLength) {
 				linkAnalysisVar.network.setOptions({edges: {length: linkAnalysisVar.edgeLength}});
 				ALERT.info("Links length now is " + linkAnalysisVar.edgeLength, linkAnalysisVar.statusTimeout);
 			} else {
-				linkAnalysisVar.edgeLength = stretchValue === "EXPAND" 
+				linkAnalysisVar.edgeLength = stretchValue === "EXPAND"
 					? linkAnalysisVar.maxEdgeLength
 					: linkAnalysisVar.minEdgeLength;
 				ALERT.warning("Cannot " + stretchValue.toLowerCase() + " any further.", linkAnalysisVar.statusTimeout);
@@ -231,12 +250,12 @@ var LinkAnalysisView = Backbone.View.extend({
 	fullScreenClick: function(e) {
 		$(e.currentTarget).hide();
 		$(e.currentTarget).siblings().show();
-		
+
 		var isFullScreen = JSON.parse($(e.currentTarget).data('value'));
 		if (isFullScreen) {
 			linkAnalysisVar.pageSidebarMinified = $(".body-container").hasClass("page-sidebar-minified");
 		}
-		
+
 		screenfull.toggle($('body')[0]);
 	},
 	selectEntity: function(e) {
@@ -244,17 +263,17 @@ var LinkAnalysisView = Backbone.View.extend({
 		var selectedNodes = e.ctrlKey ? linkAnalysisVar.network.getSelectedNodes() : [];
 		var nodesWithEntity = linkAnalysisVar.nodes.get({
 			filter: function (item) {
-				return (item.image === entityValue 
+				return (item.image === entityValue
 						&& (!item['cluster'] || item['cluster'] === false));
 			}
 		});
-		
+
 		_.forEach(nodesWithEntity, function(item) {
 			if (!item[linkAnalysisVar.resolveNameId] || item[linkAnalysisVar.resolveNameId] === '') {
 				selectedNodes.push(item.id);
 			}
 		});
-		
+
 		linkAnalysisVar.network.selectNodes(selectedNodes);
 		ALERT.info(selectedNodes.length + " item(s) selected.", linkAnalysisVar.statusTimeout);
 	},
@@ -271,14 +290,14 @@ var LinkAnalysisView = Backbone.View.extend({
 				ALERT.error("Rows must be between 1 to " + linkAnalysisVar.maxRows + "!", linkAnalysisVar.statusTimeout);
 				return;
 			}
-			
-			linkAnalysisVar.laView.model.set('query', qry); 
-			linkAnalysisVar.laView.model.set('rows', rows); 
+
+			linkAnalysisVar.laView.model.set('query', qry);
+			linkAnalysisVar.laView.model.set('rows', rows);
 
 			ALERT.info("Retrieving " + rows + " document(s) with query, " + linkAnalysisVar.laView.model.get('query'), linkAnalysisVar.statusTimeout);
-			search(getPostData(linkAnalysisVar.laView.model.get('query'), 
-					rows, 
-					$("#laFilterQuery").val() , 
+			search(getPostData(linkAnalysisVar.laView.model.get('query'),
+					rows,
+					$("#laFilterQuery").val() ,
 					$("#laFacet").val()));
 		}
 	},
@@ -288,20 +307,20 @@ var LinkAnalysisView = Backbone.View.extend({
 	render : function () {
 		//this.$el.find('#laSearchTxt').val(this.model.get('query'));
 		this.$el.find('#laSearchTxt').val('test');
-		
+
 		var theTemplateScript = $("#hb-rows").html();
 		var theTemplate = Handlebars.compile(theTemplateScript);
 		var availableRows = [1, 5, 10, 25, 50, linkAnalysisVar.maxRows];
 		if (_.indexOf(availableRows, parseInt(this.model.get('rows'))) == -1) {
 			availableRows.push(this.model.get('rows'));
 		}
-		var content  = { 
+		var content  = {
 			rows : availableRows,
 			selectedValue: this.model.get('rows')
 		};
 		var compiledHtml = theTemplate(content);
 		this.$el.find('#laRows').html(compiledHtml);
-		
+
 		$("#laRows").select2({
 			maximumInputLength: 4,
 			width: 65,
@@ -316,8 +335,8 @@ var LinkAnalysisView = Backbone.View.extend({
 			}
 		}).select2("val", this.model.get('rows'));
 	},
-	saveSnapshot : function () {		
-		new SaveSnapshotView();		
+	saveSnapshot : function () {
+		new SaveSnapshotView();
 	},
 	listSnapshot : function () {
 		new ListSnapshotView();
@@ -333,7 +352,7 @@ var LinkAnalysisSnapshotModel = Backbone.Model.extend({
 			description : "",
 			dateCreated : null,
 			userName : "",
-			network : {}			
+			network : {}
 		};
 	}
 });
@@ -351,16 +370,16 @@ var SaveSnapshotView = ModalView.extend({
 		'click .submit' : 'saveSnapshot',
 		'keyup #snapshot_name' : 'changeSnapshotName',
 		'submit form' : 'onSubmit'
-	},	
+	},
 	initialize : function() {
 		this.render();
-	},	
+	},
 	changeSnapshotName : function (event) {
-		// del button pressed.  we don't care but we don't want default "removeSelectedNodes" either			
-		if (event.keyCode == 46) {				
+		// del button pressed.  we don't care but we don't want default "removeSelectedNodes" either
+		if (event.keyCode == 46) {
 			event.stopPropagation();
 		}
-		
+
 		if ($(event.currentTarget).val().trim().length > 0) {
 			$('#snapshot_save_btn').removeClass('disabled');
 		}
@@ -370,20 +389,20 @@ var SaveSnapshotView = ModalView.extend({
 	},
 	saveSnapshot : function () {
 		console.log("SaveSnapshotView::saveSnapshot");
-			
+
 		var nodes = linkAnalysisVar.nodes.get();
 		var edges = linkAnalysisVar.edges.get();
 		var data = this.$el.find('form').serializeObject();
-		
+
 		this.model.clear();
-		this.model.set({ 
-				"label": data.name, 
+		this.model.set({
+				"label": data.name,
 				"description": data.description,
-				"mapData": {"nodes": nodes, "edges": edges}			
+				"mapData": {"nodes": nodes, "edges": edges}
 		});
 		ALERT.status("Saving...");
 		this.model.save(null, {
-			success: function (data) {					
+			success: function (data) {
 				ALERT.info("Save was successful.");
 				if (data && data.success && data.success == false) {
 					ALERT.error(data.message ? data.message : "Error occuring while saving snapshot.  Contact support if problem persists.");
@@ -395,15 +414,15 @@ var SaveSnapshotView = ModalView.extend({
 			done: function() {
 				ALERT.clearStatus();
 			}
-		});			
+		});
 	},
 	onSubmit : function(event) {
 		if ($('#snapshot_name').val().trim().length > 0) {
 			this.saveSnapshot();
 			this.$el.modal('hide');
 		}
-		
-		event.preventDefault();			
+
+		event.preventDefault();
 	},
 	render : function () {
 		this.modal(this.template());
@@ -431,7 +450,7 @@ var ListSnapshotView = ModalView.extend({
 				ALERT.clearStatus();
 				ALERT.error("Error trying to load snapshot. Your session may have timed out.")
 			}
-		});		
+		});
 	},
 	render : function () {
 		this.modal(this.template({"snapshots" : this.model.models}));
@@ -440,7 +459,7 @@ var ListSnapshotView = ModalView.extend({
 		var selectedId = $(event.currentTarget).data('snapshot');
 		console.log("loadSnapshot id:" + selectedId);
 		ALERT.status("Loading...");
-		if (selectedId) {				
+		if (selectedId) {
 			var snapshot = new LinkAnalysisSnapshotModel({id:selectedId});
 			snapshot.fetch().done(function() {
 				if (snapshot.get('network')) {
@@ -456,7 +475,7 @@ var ListSnapshotView = ModalView.extend({
 				ALERT.clearStatus();
 			});
 		}
-		
+
 		this.$el.modal('hide');
 	},
 	removeSnapshot : function(event) {
@@ -465,7 +484,7 @@ var ListSnapshotView = ModalView.extend({
 
 		if (selectedId) {
 			var modelToRemove = this.model.get(selectedId);
-			if (modelToRemove) {					
+			if (modelToRemove) {
 				modelToRemove.destroy({success : function(model, resp) {
 					if (resp && resp.success == true) {
 						$(event.target).closest('li').fadeOut();
@@ -473,5 +492,5 @@ var ListSnapshotView = ModalView.extend({
 				}});
 			}
 		}
-	}	
+	}
 });

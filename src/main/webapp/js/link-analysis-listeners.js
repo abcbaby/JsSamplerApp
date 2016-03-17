@@ -38,47 +38,47 @@ function registerNetworkListeners() {
 	});
 
     linkAnalysisVar.network.on("dragStart", function (params) {
-		if (linkAnalysisVar.highlighting) { 
+		if (linkAnalysisVar.highlighting) {
 	    	linkAnalysisVar.drag = true;
-	    	
+
 			// handles multiple selection w/ Ctrl key
 			linkAnalysisVar.selectedNodes = params.event.srcEvent.ctrlKey ? linkAnalysisVar.network.getSelectedNodes() : null;
-	    	
+
 	    	// turn off physics so nodes/edges not moving
 			linkAnalysisVar.network.setOptions({
 				physics: {
 					enabled: false
 				}
 			});
-	    	
+
 			linkAnalysisVar.rect.startX = params.pointer.DOM.x;
 			linkAnalysisVar.rect.startY = params.pointer.DOM.y;
 			linkAnalysisVar.container[0].style.cursor = "crosshair";
 			saveDrawingSurface();
 		}
 	});
-    
+
     linkAnalysisVar.network.on("dragging", function (params) {
-		if (linkAnalysisVar.highlighting && linkAnalysisVar.drag) { 
+		if (linkAnalysisVar.highlighting && linkAnalysisVar.drag) {
 			var canvas = linkAnalysisVar.network.canvas.frame.canvas;
 			var ctx = canvas.getContext('2d');
 			linkAnalysisVar.rect.w = params.pointer.DOM.x - linkAnalysisVar.rect.startX;
 			linkAnalysisVar.rect.h = params.pointer.DOM.y - linkAnalysisVar.rect.startY ;
-			
+
 			if (restoreDrawingSurface(ctx)) {
 				drawHighlightRectangle(ctx);
 			}
 		}
     });
-    
+
     linkAnalysisVar.network.on("dragEnd", function (params) {
-		if (linkAnalysisVar.highlighting && linkAnalysisVar.drag) { 
+		if (linkAnalysisVar.highlighting && linkAnalysisVar.drag) {
 			linkAnalysisVar.container[0].style.cursor = "default";
 			var canvas = linkAnalysisVar.network.canvas.frame.canvas;
 			var ctx = canvas.getContext('2d');
 			linkAnalysisVar.rect.w = params.pointer.DOM.x - linkAnalysisVar.rect.startX;
 			linkAnalysisVar.rect.h = params.pointer.DOM.y - linkAnalysisVar.rect.startY ;
-			
+
 			if (restoreDrawingSurface(ctx)) {
 				highlightNodes();
 			} else {
@@ -93,24 +93,24 @@ function registerNetworkListeners() {
 			}
 			linkAnalysisVar.drawingSurfaceImageData = null;
 			linkAnalysisVar.drag = false;
-			
+
 			// put back the physics & let nodes move naturally
 			linkAnalysisVar.network.setOptions({
 				physics: {
 					enabled: !linkAnalysisVar.freeze
 				}
-			});			
+			});
 		}
-    });	
+    });
 
     linkAnalysisVar.network.on("stabilizationProgress", function(params) {
         var widthFactor = params.iterations/params.total;
         ALERT.status("Loading..." + Math.round(widthFactor*100) + "%");
     });
-    
+
     linkAnalysisVar.network.on("stabilizationIterationsDone", function() {
         ALERT.status("Loading...100%");
-        
+
         setTimeout(function () {
         	ALERT.clearStatus();
     	}, linkAnalysisVar.statusTimeout);
@@ -131,6 +131,19 @@ function registerPageListeners() {
 				var selectedNodes = linkAnalysisVar.nodes.get(selection.nodes);
 				window.open('/search/document/' + selectedNodes[0][linkAnalysisVar.docId],'_blank');
 				break;
+			case "Rename":
+				var selectedNode = linkAnalysisVar.nodes.get(selection.nodes)[0];
+				bootbox.prompt({
+					title : "Enter new name for '" + selectedNode.label + "'",
+					value : selectedNode.label,
+					callback : function(result) {
+						if (result !== null) {
+							selectedNode.label = result;
+		            		linkAnalysisVar.nodes.update(selectedNode);
+						}
+					}
+				});
+				break;
 			case "Remove From Graph":
 				removeSelectedNodes();
 				break;
@@ -147,7 +160,7 @@ function registerPageListeners() {
 		    				var resolveName = result.trim();
 		    				var rId = createResolveId(linkAnalysisVar.resolveId);
 		    				var selectedNodes = _.without(linkAnalysisVar.nodes.get(selection.nodes), null);
-		    					
+
 		    				_.each(selectedNodes, function(item) {
 		    					item[linkAnalysisVar.resolveNameId] = rId;
 		    				});
@@ -185,7 +198,7 @@ function registerPageListeners() {
 				if (!_.isUndefined(selectedNodes[0])) {
 					var idStr = selectedNodes[0]['id'].replace(/[^a-z\d]/gi, '-').toLowerCase();
 					var dialogId = idStr + "-dialog";
-					
+
 					if($("#" + dialogId).length == 0) {
 						var theTemplateScript = $("#hb-properties-dialog").html();
 						var theTemplate = Handlebars.compile(theTemplateScript);
@@ -194,28 +207,16 @@ function registerPageListeners() {
 							selectedNode: selectedNodes[0]
 						};
 						var compiledHtml = theTemplate(content);
-						
+
 						$("#propertiesDialogs").append(compiledHtml);
-						
-					    $("#" + dialogId).puidialog({
-					        showEffect: 'fade',
-					        hideEffect: 'fade',
-					        width: 700,
-					        height: 600,
-					        minimizable: true,
-					        maximizable: false,
-					        draggable: true,
-					        responsive: true,
-					        modal: false,
-					    });
-					    
-					    // put above the classifcation banner when minimizied
-					    $(".pui-dialog-docking-zone").css({
-					        bottom: "25px"
-					    });
 					}
-				    
-				    $("#" + dialogId).puidialog('show');
+
+				    $("#" + dialogId).dialog({
+				    	show: {effect: 'fade'},
+				    	hide: {effect: 'fade'},
+				        width: 700,
+				        height: 600,
+				    });
 				}
 				break;
 			case "See Also":
@@ -223,7 +224,7 @@ function registerPageListeners() {
 				if (!_.isUndefined(selectedNodes[0])) {
 					var idStr = selectedNodes[0]['id'].replace(/[^a-z\d]/gi, '-').toLowerCase();
 					var seeAlsoList = selectedNodes[0].seeAlso;
-					
+
 					var theTemplateScript = $("#hb-see-also").html();
 					var theTemplate = Handlebars.compile(theTemplateScript);
 					var content  = {
@@ -234,13 +235,13 @@ function registerPageListeners() {
 						title: "See Also for " + idStr,
 						message: compiledHtml
 					});
-					
+
 					new LinkAnalysisSeeAlsoView(bootBoxModal);
 				}
 				break;
 		}
 	});
-	
+
 	// custom code hiding common menus
 	document.addEventListener(screenfull.raw.fullscreenchange, function () {
 		var panelHeight;
@@ -263,14 +264,14 @@ function registerPageListeners() {
 			height: panelHeight
 		});
 	});
-	
+
 	$("body").on("click", function(){
 		$("#contextMenu").hide();
-	}) 
-    
+	})
+
 	$(document).keyup(function(e){
 	    if (e.keyCode == 46 && !linkAnalysisVar.resolveDialogOpen) { // delete button pressed
 	    	removeSelectedNodes();
 	    }
-	}) 
+	})
 }
