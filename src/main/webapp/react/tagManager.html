@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<link href="../network/network_files/bootstrap.min.css" rel="stylesheet" type="text/css">
+
+    <script type="text/javascript" src="https://rawgit.com/ruanyf/react-demos/master/build/react.js"></script>
+    <script type="text/javascript" src="https://rawgit.com/ruanyf/react-demos/master/build/react-dom.js"></script>
+    <script type="text/javascript" src="https://rawgit.com/ruanyf/react-demos/master/build/browser.min.js"></script>
+    <script type="text/javascript" src="https://rawgit.com/ruanyf/react-demos/master/build/jquery.min.js"></script>
+	<script type="text/javascript" src="../network/network_files/bootstrap.min.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+  </head>
+  <body>
+  	<p/>
+	<div id="content"></div>
+
+    <script type="text/babel">
+	var myTags = ['One', 'Two', 'Three', 'Four', 'Five'];
+
+	// the container component for this module
+	var TagsManager = React.createClass({
+		getInitialState: function() {
+			this.sortData(myTags);
+			return {
+				tags: myTags
+			};
+		},
+		sortData: function(dataList) {
+			// sort in asc alphabetical order
+			dataList.sort(function (a, b) {
+				return a.toLowerCase().localeCompare(b.toLowerCase());
+			});
+		},
+		reloadTags: function() {
+			this.sortData(myTags);
+			this.setState({
+				tags: myTags
+			});
+			this.render;
+		},
+		render: function() {
+			return (
+				<div className="row">
+					<div className="col-lg-1">&nbsp;</div>
+					<Results tags={this.state.tags} reloadTags={this.reloadTags}/>
+					<div className="col-lg-1">&nbsp;</div>
+				</div>
+			);
+		}
+	});
+
+	var Results = React.createClass({
+		onEditTag: function(tagId) {
+			var self = this;
+			bootbox.prompt({
+				title : "Enter tag name:",
+				value : _.isUndefined(tagId) ? '' : tagId,
+				callback : function(result) {
+					if (result) {
+						if (_.isUndefined(tagId)) {
+							// add tag
+							myTags.push(result);
+						} else {
+							// update tag
+							myTags = _.without(myTags, tagId);
+							myTags.push(result);
+						}
+						self.props.reloadTags();
+					}
+				}
+			});
+		},
+		render: function() {
+			if(this.props.tags.length === 0) {
+				return <h4>No Results Found.</h4>;
+			}
+			var tagsHeader = (
+				<tr>
+					<th className="text-right">#</th>
+					<th>Tag Name</th>
+					<th colSpan="2" className="text-center">
+						<EventAction
+							label="Create New Tag"
+							onClick={this.onEditTag}
+							icon="fa fa-plus" />
+					</th>
+				</tr>
+			);
+
+			var self = this;
+			var tagsBody = this.props.tags.map(function(tag, i) {
+
+				return (
+					<ResultItem row={i+1}
+								tag={tag}
+								searchTagTitle={"View all documents with tag: " + tag}
+								editTagTitle={"Edit " + tag}
+								deleteTagTitle={"Delete " + tag}
+								onEditTag={self.onEditTag}
+								reloadTags={self.props.reloadTags} />
+				);
+			});
+
+			var tagsFooter = (
+				<tr>
+					<th colSpan="4" className="text-center">Total: {this.props.tags.length}</th>
+				</tr>
+			);
+
+			var results = (
+				<table className="table table-bordered table-condensed table-striped table-hover">
+					<thead>{tagsHeader}</thead>
+					<tbody>{tagsBody}</tbody>
+					<tfoot>{tagsFooter}</tfoot>
+				</table>
+			);
+			return <div className="tag-results col-lg-10">{results}</div>;
+		}
+	});
+
+	var ResultItem = React.createClass({
+		onDeleteTag: function(tagId) {
+			var self = this;
+			bootbox.confirm('Delete "' + tagId + '" tag?', function(result) {
+				if (result) {
+					// delete tag
+					myTags = _.without(myTags, tagId);
+
+					self.props.reloadTags();
+				}
+			});
+		},
+		render: function() {
+			return (
+				<tr>
+					<td width="5%" className="text-right">{this.props.row}.</td>
+					<td>
+						{this.props.tag}
+					</td>
+					<td width="5%" className="text-center">
+						<EventAction
+							label={this.props.editTagTitle}
+							onClick={this.props.onEditTag}
+							clickValue={this.props.tag}
+							icon="fa fa-pencil" />
+					</td>
+					<td width="5%" className="text-center">
+						<EventAction
+							label={this.props.deleteTagTitle}
+							onClick={this.onDeleteTag}
+							clickValue={this.props.tag}
+							icon="fa fa-trash" />
+					</td>
+				</tr>
+			)
+		}
+	});
+
+	var EventAction = React.createClass({
+		render: function() {
+			return (
+				<div className="clearfix">
+					<span style={{cursor:'pointer'}} onClick={() => this.props.onClick(this.props.clickValue)} title={this.props.label}>
+						<i className={this.props.icon}></i>
+					</span>
+				</div>
+			)
+		}
+	});
+
+	ReactDOM.render(<TagsManager/>, document.getElementById('content'));
+    </script>
+  </body>
+</html>
